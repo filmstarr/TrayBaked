@@ -58,27 +58,15 @@ jobs:
       run: |
         & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" "installer\TrayBaked.iss"
 
-    - name: Create GitHub Release
+    - name: Create GitHub Release with Installer
       id: create_release
-      uses: actions/create-release@v1.1.0
+      uses: softprops/action-gh-release@v1
       with:
         tag_name: v${{ env.version }}
-        release_name: Release v${{ env.version }}
+        name: Release v${{ env.version }}
         body: "Automated release from commit to main."
         draft: false
         prerelease: false
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-    - name: Upload Installer to Release
-      shell: pwsh
-      run: |
-        $installerExe = "installer\Output\TrayBaked-Setup.exe"
-        if (Test-Path $installerExe) {
-          Write-Host "Uploading $installerExe to release"
-          gh release upload "v${{ env.version }}" "$installerExe" --clobber
-        } else {
-          Write-Error "Installer EXE not found!"
-        }
+        files: installer/Output/TrayBaked-Setup.exe
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
