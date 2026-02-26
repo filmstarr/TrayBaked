@@ -58,7 +58,7 @@ static class AppLauncher
 
             try
             {
-                Launch(target);
+                await LaunchAndMinimizeAsync(target);
                 progress?.Report(new RestartStatus(app.Name, "Started", StatusKind.Success));
             }
             catch (Exception ex)
@@ -106,25 +106,105 @@ static class AppLauncher
         return new LaunchTarget(null, null);
     }
 
-    private static void Launch(LaunchTarget target)
+    private static async Task LaunchAndMinimizeAsync(LaunchTarget target)
     {
         if (target.Aumid != null)
         {
+            var existingPids = GetRunningPidsForAumid(target.Aumid);
+
             // Store/packaged apps must be launched via the Windows shell AppsFolder protocol.
             // Direct Process.Start on a WindowsApps exe is denied even for the owning user.
             Process.Start(new ProcessStartInfo($"shell:AppsFolder\\{target.Aumid}")
             {
                 UseShellExecute = true
             });
+
+            var launched = await WaitForNewAumidProcessAsync(target.Aumid, existingPids, TimeSpan.FromSeconds(10));
+            if (launched != null)
+                await MinimizeMainWindowAsync(launched, TimeSpan.FromSeconds(10));
         }
         else if (target.ExePath != null)
         {
-            Process.Start(new ProcessStartInfo(target.ExePath)
+            var p = Process.Start(new ProcessStartInfo(target.ExePath)
             {
                 UseShellExecute = true,
                 WindowStyle = ProcessWindowStyle.Minimized
             });
+
+            if (p != null)
+                await MinimizeMainWindowAsync(p, TimeSpan.FromSeconds(10));
         }
+    }
+
+    private static async Task MinimizeMainWindowAsync(Process p, TimeSpan timeout)
+    {
+        var deadline = DateTime.UtcNow + timeout;
+
+        while (DateTime.UtcNow < deadline)
+        {
+            try
+            {
+                p.Refresh();
+                if (p.HasExited)
+                    return;
+
+                var hWnd = p.MainWindowHandle;
+                if (hWnd != IntPtr.Zero)
+                {
+                    ShowWindowAsync(hWnd, SW_MINIMIZE);
+                    return;
+                }
+            }
+            catch
+            {
+                // Best-effort: some processes may deny queries briefly during startup.
+            }
+
+            await Task.Delay(150);
+        }
+    }
+
+    private static HashSet<int> GetRunningPidsForAumid(string aumid)
+    {
+        var set = new HashSet<int>();
+        foreach (var p in Process.GetProcesses())
+        {
+            try
+            {
+                if (string.Equals(GetAumidNative(p.Id), aumid, StringComparison.OrdinalIgnoreCase))
+                    set.Add(p.Id);
+            }
+            catch { }
+        }
+        return set;
+    }
+
+    private static async Task<Process?> WaitForNewAumidProcessAsync(
+        string aumid,
+        HashSet<int> existingPids,
+        TimeSpan timeout)
+    {
+        var deadline = DateTime.UtcNow + timeout;
+
+        while (DateTime.UtcNow < deadline)
+        {
+            foreach (var p in Process.GetProcesses())
+            {
+                try
+                {
+                    if (existingPids.Contains(p.Id))
+                        continue;
+
+                    if (string.Equals(GetAumidNative(p.Id), aumid, StringComparison.OrdinalIgnoreCase))
+                        return p;
+                }
+                catch { }
+            }
+
+            await Task.Delay(250);
+        }
+
+        return null;
     }
 
     private static IOrderedEnumerable<Process> OrderByLikelihood(Process[] procs) =>
@@ -186,4 +266,9 @@ static class AppLauncher
 
     [DllImport("kernel32.dll", SetLastError = true)]
     private static extern bool CloseHandle(IntPtr hObject);
+
+    private const int SW_MINIMIZE = 6;
+
+    [DllImport("user32.dll")]
+    private static extern bool ShowWindowAsync(IntPtr hWnd, int nCmdShow);
 }

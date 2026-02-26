@@ -1,12 +1,21 @@
-## TrayBaked
+## 🍞 TrayBaked
 
-TrayBaked is a small Windows tray application that helps you restart your applications after `explorer.exe` restarts (for example after a crash, Windows update, or when you restart Explorer manually). It watches for Explorer being restarted and then offers to restart your own applications so you do not need to hunt them down and launch them one by one. Especially useful for applications that don't reregister with the system tray correctly.
+TrayBaked is a small Windows tray app that helps you restart your applications after `explorer.exe` restarts (after a crash, Windows update, or a manual Explorer restart). It detects Explorer coming back and offers to relaunch your apps so you don’t have to hunt them down one by one — especially handy for apps that don’t re-register their tray icon reliably.
 
 The app is built with WPF on .NET and runs quietly in the system tray.
 
 ---
 
-## Features
+## 🧁 At a glance
+
+- ✅ Runs quietly in the tray
+- 👀 Detects Explorer restarts
+- 🔁 Restarts your chosen apps (auto or prompt)
+- 🧾 Keeps an activity log
+
+---
+
+## ✨ Features
 
 - **Explorer restart detection**: Monitors for `explorer.exe` restarts using a lightweight background watcher.
 - **Quick app restart**:
@@ -20,7 +29,7 @@ The app is built with WPF on .NET and runs quietly in the system tray.
 
 ---
 
-## Installation
+## 📦 Installation
 
 - **Download the installer**
   - Go to the [TrayBaked releases page](https://github.com/filmstarr/TrayBaked/releases).
@@ -33,7 +42,7 @@ The app is built with WPF on .NET and runs quietly in the system tray.
 
 ---
 
-## Basic Usage
+## 🚀 Basic Usage
 
 Once running, TrayBaked lives in the system tray (notification area).
 
@@ -47,7 +56,7 @@ Once running, TrayBaked lives in the system tray (notification area).
 
 ---
 
-## Configuring Applications to Restart
+## ⚙️ Configuring Applications to Restart
 
 1. **Open settings**
    - Right‑click the tray icon and choose **“Settings…”**.
@@ -64,7 +73,7 @@ Once running, TrayBaked lives in the system tray (notification area).
 
 ---
 
-## What Happens When Explorer Restarts
+## 🔁 What Happens When Explorer Restarts
 
 When TrayBaked detects that `explorer.exe` has restarted:
 
@@ -92,7 +101,7 @@ When TrayBaked detects that `explorer.exe` has restarted:
 
 ---
 
-## Tray Menu Commands
+## 🧰 Tray Menu Commands
 
 From the tray context menu you can:
 
@@ -104,7 +113,7 @@ From the tray context menu you can:
 
 ---
 
-## Troubleshooting
+## 🩺 Troubleshooting
 
 - **I don’t see the tray icon**
   - Make sure TrayBaked is running (check Task Manager).
@@ -121,7 +130,7 @@ From the tray context menu you can:
 
 ---
 
-## Building & Contributing
+## 🛠️ Building & Contributing
 
 - **Requirements**
   - Windows 10 or later.
