@@ -23,6 +23,7 @@ AppPublisherURL=https://github.com/filmstarr/TrayBaked
 DefaultDirName={commonpf}\{#MyAppName}
 DefaultGroupName={#MyAppName}
 SetupIconFile={#MyAppIcon}
+UninstallDisplayIcon={app}\{#MyAppExeName}
 OutputBaseFilename=TrayBaked-Setup
 Compression=lzma
 SolidCompression=yes
