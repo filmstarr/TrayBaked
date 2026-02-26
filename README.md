@@ -22,24 +22,14 @@ The app is built with WPF on .NET and runs quietly in the system tray.
 
 ## Installation
 
-1. **Clone** this repository:
+- **Download the installer**
+  - Go to the [TrayBaked releases page](https://github.com/filmstarr/TrayBaked/releases).
+  - Download the latest `TrayBaked-Setup.exe` from the **Assets** section.
 
-```bash
-git clone https://github.com/<your-org-or-user>/TrayBaked.git
-cd TrayBaked
-```
-
-2. **Open** the solution in Visual Studio (2022 or later is recommended).
-
-3. **Restore and build**:
-   - Ensure you have the .NET 8.0 SDK with Windows desktop workload installed.
-   - Build the `TrayBaked` project in `Release` or `Debug` configuration.
-
-4. **Run** the app:
-   - Set `TrayBaked` as the startup project.
-   - Press F5 (Debug) or Ctrl+F5 (Run without debugging).
-
-You should now see the TrayBaked icon appear in the Windows system tray.
+- **Run the installer**
+  - Double‑click `TrayBaked-Setup.exe`.
+  - Follow the on‑screen steps to choose an install location and complete setup.
+  - After installation, TrayBaked will be available from the Start menu and in the system tray.
 
 ---
 

@@ -49,7 +49,7 @@ class TrayAppContext : IDisposable
         _trayIcon.MouseUp += (_, e) =>
         {
             if (e.Button == System.Windows.Forms.MouseButtons.Left)
-                Application.Current.Dispatcher.BeginInvoke(OpenActivityLog);
+                Application.Current.Dispatcher.BeginInvoke(OpenSettings);
             else if (e.Button == System.Windows.Forms.MouseButtons.Right)
                 Application.Current.Dispatcher.BeginInvoke(OpenTrayMenu);
         };

@@ -12,6 +12,7 @@
 #define MyAppName "TrayBaked"
 #define MyAppPublisher "TrayBaked"
 #define MyAppExeName "TrayBaked.exe"
+#define MyAppIcon "TrayBaked.ico"
 
 [Setup]
 AppId={{C8B1B191-7F8D-4A1F-83B1-0B8B6B9E7E10}
@@ -21,6 +22,7 @@ AppPublisher={#MyAppPublisher}
 AppPublisherURL=https://github.com/filmstarr/TrayBaked
 DefaultDirName={commonpf}\{#MyAppName}
 DefaultGroupName={#MyAppName}
+SetupIconFile={#MyAppIcon}
 OutputBaseFilename=TrayBaked-Setup
 Compression=lzma
 SolidCompression=yes
