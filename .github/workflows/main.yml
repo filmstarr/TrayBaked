@@ -51,12 +51,12 @@ jobs:
           ForEach-Object { $_ -replace '{#MyAppVersion}', '${{ env.version }}' } |
           Set-Content $installerPath
 
-    - name: Install Inno Setup
-      uses: ilammy/Setup-Inno-Setup@v2
+    - name: Install Inno Setup via Chocolatey
+      run: choco install innosetup -y
 
     - name: Build Installer
       run: |
-        iscc installer\TrayBaked.iss
+        & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" "installer\TrayBaked.iss"
 
     - name: Create GitHub Release
       id: create_release
