@@ -73,7 +73,7 @@ jobs:
     - name: Upload Installer to Release
       shell: pwsh
       run: |
-        $installerExe = "installer\Output\TrayBakedInstaller.exe"
+        $installerExe = "installer\Output\TrayBaked-Setup.exe"
         if (Test-Path $installerExe) {
           Write-Host "Uploading $installerExe to release"
           gh release upload "v${{ env.version }}" "$installerExe" --clobber
