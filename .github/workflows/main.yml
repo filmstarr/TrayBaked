@@ -31,7 +31,7 @@ jobs:
           }
           $versionPrefixes = Select-Xml -Path $csproj.FullName -XPath "//VersionPrefix"
           foreach ($versionPrefix in $versionPrefixes){
-            $version.Node.InnerText = '${{ env.version }}'
+            $versionPrefix.Node.InnerText = '${{ env.version }}'
           }
 
           if ($versions -ne $null)
@@ -44,41 +44,55 @@ jobs:
           }
         }
 
-    - name: Build Solution
+    - name: Build and Publish Projects
       run: |
         foreach ($project in '${{ vars.Projects }}'.Split([Environment]::NewLine))
         {
           if (![string]::IsNullOrWhiteSpace($project))
           {
             $name = [System.IO.Path]::GetFileNameWithoutExtension($project)
+            $outputFolder = "publish/$name"
             dotnet publish $project `
               -c Release `
               -r win-x64 `
               --self-contained false `
               /p:PublishSingleFile=false `
-              --output publish/$name
+              --output $outputFolder
           }
         }
 
-    - name: Prepare Artifacts
-      if: vars.Artifacts != '_'
+    - name: Create GitHub Release
+      id: create_release
+      uses: actions/create-release@v1
+      with:
+        tag_name: v${{ env.version }}
+        release_name: Release v${{ env.version }}
+        body: "Automated release from commit to main."
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Upload Release Artifacts
+      if: vars.Releases != '_'
+      shell: pwsh
       run: |
-        foreach ($artifact in '${{ vars.Artifacts }}'.Split([Environment]::NewLine))
+        $filesToUpload = @()
+        foreach ($releasePath in '${{ vars.Releases }}'.Split([Environment]::NewLine))
         {
-          if (![string]::IsNullOrWhiteSpace($artifact))
+          if (![string]::IsNullOrWhiteSpace($releasePath))
           {
-            $artifactParts = $artifact.Split('=>') | Where {![string]::IsNullOrWhiteSpace($_)}
-            if ($artifactParts.Count -eq 2)
-            {
-              $destinationFolder = 'out/artifacts/' + $artifactParts[1].Trim()
-              Copy-Item -Path $artifactParts[0].Trim() -Destination $destinationFolder -Recurse
+            $path = $releasePath.Trim()
+            if (Test-Path $path) {
+              $filesToUpload += (Get-ChildItem -Path $path -Recurse | ForEach-Object { $_.FullName })
             }
           }
         }
 
-    - name: Upload Artifacts
-      uses: actions/upload-artifact@v4
-      if: vars.Artifacts != '_'
-      with:
-        name: ${{ github.repository_owner }}_${{ github.event.repository.name }}_${{ github.ref_name }}_${{ env.version }}${{ inputs.nuget-version-suffix }}_artifacts
-        path: out/artifacts/
+        foreach ($file in $filesToUpload)
+        {
+          Write-Host "Uploading $file to release"
+          gh release upload "v${{ env.version }}" "$file" --clobber
+        }
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
