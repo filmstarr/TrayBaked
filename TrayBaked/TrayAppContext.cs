@@ -4,6 +4,7 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using TrayBaked.Models;
 using TrayBaked.Windows;
+using Windows.UI.Notifications;
 
 // Resolve ambiguity: both UseWpf and UseWindowsForms expose an 'Application' type
 using Application = System.Windows.Application;
@@ -27,17 +28,20 @@ class TrayAppContext : IDisposable
     // the ContextMenu closes properly when the user clicks elsewhere.
     private Window? _menuOwner;
 
-    // Only one Settings window may be open at a time.
-    private SettingsWindow? _settingsWindow;
+    // Only one of each window may be open at a time.
+    private SettingsWindow?    _settingsWindow;
+    private ActivityLogWindow? _activityLogWindow;
 
     public TrayAppContext()
     {
         _config = ConfigManager.Load();
 
+        NotificationHelper.EnsureRegistered();
+
         _trayIcon = new System.Windows.Forms.NotifyIcon
         {
             Icon    = AppIconHelper.GetTrayIcon(),
-            Text    = "TrayBaked — Watching for Explorer restarts",
+            Text    = "TrayBaked",
             Visible = true,
         };
 
@@ -45,7 +49,7 @@ class TrayAppContext : IDisposable
         _trayIcon.MouseUp += (_, e) =>
         {
             if (e.Button == System.Windows.Forms.MouseButtons.Left)
-                Application.Current.Dispatcher.BeginInvoke(OpenSettings);
+                Application.Current.Dispatcher.BeginInvoke(OpenActivityLog);
             else if (e.Button == System.Windows.Forms.MouseButtons.Right)
                 Application.Current.Dispatcher.BeginInvoke(OpenTrayMenu);
         };
@@ -108,6 +112,9 @@ class TrayAppContext : IDisposable
 
         var menu = new ContextMenu { Style = menuStyle };
         menu.Items.Add(Item("Settings…",        (_, _) => OpenSettings()));
+        menu.Items.Add(new Separator            { Style = sepStyle });
+        menu.Items.Add(Item("Restart Apps…",    (_, _) => OpenRestartWindow()));
+        menu.Items.Add(Item("Activity Log…",    (_, _) => OpenActivityLog()));
         menu.Items.Add(Item("Restart Explorer", (_, _) => _ = RestartExplorerAsync()));
         menu.Items.Add(new Separator            { Style = sepStyle });
         menu.Items.Add(Item("Exit",             (_, _) => ExitApplication()));
@@ -150,15 +157,45 @@ class TrayAppContext : IDisposable
         _settingsWindow.ShowDialog();
     }
 
+    private void OpenActivityLog()
+    {
+        if (_activityLogWindow != null)
+        {
+            if (_activityLogWindow.WindowState == WindowState.Minimized)
+                _activityLogWindow.WindowState = WindowState.Normal;
+            _activityLogWindow.Activate();
+            return;
+        }
+
+        _activityLogWindow = new ActivityLogWindow();
+        _activityLogWindow.Closed += (_, _) => _activityLogWindow = null;
+        _activityLogWindow.Show();
+    }
+
+    private void OpenRestartWindow()
+    {
+        if (_config.Apps.Count == 0) return;
+
+        var appStates = _config.Apps
+            .Select(app => (App: app,
+                            Running: Process.GetProcessesByName(app.ProcessName).Length > 0))
+            .ToList();
+
+        new RestartWindow(appStates).ShowDialog();
+    }
+
     private void SaveConfig(AppConfig config)
     {
         _config = config;
         ConfigManager.Save(config);
         _monitor.UpdateDebounce(config.DebounceSeconds);
+        ActivityLog.Add("Application list updated");
     }
 
     private void OnExplorerRestarted(object? sender, EventArgs e)
     {
+        ActivityLog.Add("Explorer restarted");
+
         if (_confirmationPending) return;
         _confirmationPending = true;
 
@@ -169,22 +206,99 @@ class TrayAppContext : IDisposable
         });
     }
 
-    private void ShowConfirmation()
+    private async void ShowConfirmation()
     {
         try
         {
+            if (_config.Apps.Count == 0) return;
+
             var appStates = _config.Apps
                 .Select(app => (App: app,
                                 Running: Process.GetProcessesByName(app.ProcessName).Length > 0))
                 .ToList();
 
-            var win = new RestartWindow(appStates);
-            win.ShowDialog();
+            if (_config.AutoRestart)
+            {
+                var toRestart = appStates.Where(s => s.Running).Select(s => s.App).ToList();
+                if (toRestart.Count > 0)
+                {
+                    _monitor.Suppress(TimeSpan.FromSeconds(30));
+                    await AppLauncher.RestartAppsAsync(toRestart,
+                        new Progress<RestartStatus>(LogRestartStatus));
+                }
+            }
+            else
+            {
+                ShowRestartToast(appStates);
+            }
         }
         finally
         {
             _confirmationPending = false;
         }
+    }
+
+    private void ShowRestartToast(List<(WatchedApp App, bool Running)> appStates)
+    {
+        var toast = NotificationHelper.CreateToast(
+            "Explorer restarted — restart your applications?",
+            ("All",     "restart-all"),
+            ("Running", "restart-running"),
+            ("Select…", "select"));
+
+        toast.Activated += (_, e) =>
+        {
+            var arg = ((ToastActivatedEventArgs)e).Arguments;
+            Application.Current.Dispatcher.BeginInvoke(() => HandleToastAction(arg, appStates));
+        };
+
+        // If the notification system is unavailable, fall back to the dialog
+        toast.Failed += (_, _) =>
+            Application.Current.Dispatcher.BeginInvoke(() =>
+            {
+                var win = new RestartWindow(appStates);
+                win.ShowDialog();
+            });
+
+        NotificationHelper.Show(toast);
+    }
+
+    private async void HandleToastAction(string arg, List<(WatchedApp App, bool Running)> appStates)
+    {
+        switch (arg)
+        {
+            case "restart-all":
+                _monitor.Suppress(TimeSpan.FromSeconds(30));
+                await AppLauncher.RestartAppsAsync(appStates.Select(s => s.App),
+                    new Progress<RestartStatus>(LogRestartStatus));
+                break;
+
+            case "restart-running":
+                var running = appStates.Where(s => s.Running).Select(s => s.App).ToList();
+                if (running.Count > 0)
+                {
+                    _monitor.Suppress(TimeSpan.FromSeconds(30));
+                    await AppLauncher.RestartAppsAsync(running,
+                        new Progress<RestartStatus>(LogRestartStatus));
+                }
+                break;
+
+            case "select":
+            case "":
+                new RestartWindow(appStates).ShowDialog();
+                break;
+        }
+    }
+
+    private static void LogRestartStatus(RestartStatus status)
+    {
+        var msg = status.Kind switch
+        {
+            StatusKind.Success => $"{status.AppName} restarted",
+            StatusKind.Error   => $"{status.AppName}: {status.StatusText}",
+            _                  => null
+        };
+        if (msg != null) ActivityLog.Add(msg);
     }
 
     private void ExitApplication()

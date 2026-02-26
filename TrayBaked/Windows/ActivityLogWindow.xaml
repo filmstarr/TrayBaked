@@ -1,0 +1,82 @@
+<Window x:Class="TrayBaked.Windows.ActivityLogWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="TrayBaked — Activity Log"
+        Width="600" Height="420"
+        MinWidth="440" MinHeight="280"
+        WindowStartupLocation="CenterScreen"
+        Background="{DynamicResource WindowBg}"
+        FontFamily="Segoe UI">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>  <!-- header -->
+            <RowDefinition Height="*"/>     <!-- log grid -->
+            <RowDefinition Height="Auto"/>  <!-- footer -->
+        </Grid.RowDefinitions>
+
+        <!-- ── Header ────────────────────────────────────────────────────── -->
+        <Border Grid.Row="0"
+                Background="{DynamicResource HeaderBg}"
+                BorderBrush="{DynamicResource BorderBrush}"
+                BorderThickness="0,0,0,1"
+                Padding="16,12">
+            <StackPanel Orientation="Horizontal">
+                <Image x:Name="HeaderIcon" Width="32" Height="32"
+                       Margin="0,0,12,0" VerticalAlignment="Center"
+                       RenderOptions.BitmapScalingMode="HighQuality"/>
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="TrayBaked"
+                               FontSize="16" FontWeight="SemiBold"/>
+                    <TextBlock Text="Activity Log"
+                               FontSize="12"
+                               Foreground="{DynamicResource TextSecondary}"/>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <!-- ── Log DataGrid ───────────────────────────────────────────────── -->
+        <Border Grid.Row="1"
+                Margin="16,12,16,8"
+                BorderBrush="{DynamicResource BorderBrush}"
+                BorderThickness="1"
+                CornerRadius="4"
+                ClipToBounds="True">
+            <DataGrid x:Name="LogGrid"
+                      BorderThickness="0"
+                      AutoGenerateColumns="False"
+                      CanUserAddRows="False"
+                      CanUserDeleteRows="False"
+                      CanUserSortColumns="False"
+                      IsReadOnly="True"
+                      RowStyle="{StaticResource DataGridRowFlat}"
+                      CellStyle="{StaticResource DataGridCellFlat}">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Time"
+                                        Width="130"
+                                        Binding="{Binding TimestampDisplay}"/>
+                    <DataGridTextColumn Header="Event"
+                                        Width="*"
+                                        Binding="{Binding Message}"/>
+                </DataGrid.Columns>
+            </DataGrid>
+        </Border>
+
+        <!-- ── Footer ────────────────────────────────────────────────────── -->
+        <Border Grid.Row="2"
+                Background="{DynamicResource FooterBg}"
+                BorderBrush="{DynamicResource BorderBrush}"
+                BorderThickness="0,1,0,0"
+                Padding="16,10">
+            <Grid>
+                <Button Content="Clear"
+                        HorizontalAlignment="Left"
+                        Click="Clear_Click"/>
+                <Button Content="Close"
+                        Style="{StaticResource PrimaryButton}"
+                        HorizontalAlignment="Right"
+                        Click="Close_Click"/>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

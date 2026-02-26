@@ -69,8 +69,7 @@
                       AutoGenerateColumns="False"
                       IsReadOnly="True"
                       CanUserAddRows="False"
-                      CanUserDeleteRows="False"
-                      MouseDoubleClick="ProcessGrid_DoubleClick">
+                      CanUserDeleteRows="False">
                 <DataGrid.RowStyle>
                     <Style TargetType="DataGridRow" BasedOn="{StaticResource {x:Type DataGridRow}}">
                         <Style.Triggers>

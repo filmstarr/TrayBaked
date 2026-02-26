@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
@@ -94,6 +95,7 @@ public partial class PickProcessWindow : Window
         // Wrap in a ListCollectionView so DataGrid's built-in column sorting and our
         // filter predicate both work without replacing ItemsSource on every keystroke.
         _view = new ListCollectionView(_allProcesses) { Filter = FilterPredicate };
+        _view.SortDescriptions.Add(new SortDescription(nameof(ProcessItem.DisplayName), ListSortDirection.Ascending));
         ProcessGrid.ItemsSource = _view;
     }
 
@@ -123,12 +125,6 @@ public partial class PickProcessWindow : Window
     private void Refresh_Click(object sender, RoutedEventArgs e)               => LoadProcesses();
     private void Add_Click(object sender, RoutedEventArgs e)                   => AcceptSelection();
     private void Cancel_Click(object sender, RoutedEventArgs e)                { DialogResult = false; Close(); }
-
-    private void ProcessGrid_DoubleClick(object sender, MouseButtonEventArgs e)
-    {
-        if (ProcessGrid.SelectedItem != null)
-            AcceptSelection();
-    }
 }
 
 // ─── Process view-model ──────────────────────────────────────────────────────

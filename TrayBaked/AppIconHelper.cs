@@ -17,10 +17,34 @@ namespace TrayBaked;
 static class AppIconHelper
 {
     private static BitmapSource? _cached64;
+    private static string?       _cachedPngPath;
 
     /// <summary>Returns a 64-px frozen BitmapSource suitable for Window.Icon.</summary>
     public static BitmapSource GetIconBitmapSource()
         => _cached64 ??= Render(64);
+
+    /// <summary>
+    /// Saves a 64-px PNG to %LOCALAPPDATA%\TrayBaked\icon.png and returns its path.
+    /// Used as the image source for toast notifications.
+    /// </summary>
+    public static string GetOrSaveIconPng()
+    {
+        if (_cachedPngPath != null) return _cachedPngPath;
+
+        var dir = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "TrayBaked");
+        Directory.CreateDirectory(dir);
+        var path = Path.Combine(dir, "icon.png");
+
+        var enc = new PngBitmapEncoder();
+        enc.Frames.Add(BitmapFrame.Create(Render(128)));
+        using var fs = new FileStream(path, FileMode.Create, FileAccess.Write);
+        enc.Save(fs);
+
+        _cachedPngPath = path;
+        return path;
+    }
 
     /// <summary>Creates a GDI icon for the system tray NotifyIcon.</summary>
     public static System.Drawing.Icon GetTrayIcon()

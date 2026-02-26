@@ -112,7 +112,7 @@ static class AppLauncher
         {
             // Store/packaged apps must be launched via the Windows shell AppsFolder protocol.
             // Direct Process.Start on a WindowsApps exe is denied even for the owning user.
-            Process.Start(new ProcessStartInfo("explorer.exe", $"shell:AppsFolder\\{target.Aumid}")
+            Process.Start(new ProcessStartInfo($"shell:AppsFolder\\{target.Aumid}")
             {
                 UseShellExecute = true
             });

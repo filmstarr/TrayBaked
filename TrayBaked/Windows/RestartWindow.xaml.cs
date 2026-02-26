@@ -2,7 +2,11 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
+using System.Windows.Media;
 using TrayBaked.Models;
+using CheckBox = System.Windows.Controls.CheckBox;
 
 namespace TrayBaked.Windows;
 
@@ -10,6 +14,7 @@ public partial class RestartWindow : Window
 {
     private readonly List<(WatchedApp App, bool Running)> _appStates;
     private readonly ObservableCollection<RestartStatusItem> _statusItems = new();
+    private List<AppCheckItem> _checkItems = new();
     private int _finalCount;
 
     public RestartWindow(List<(WatchedApp App, bool Running)> appStates)
@@ -27,21 +32,19 @@ public partial class RestartWindow : Window
 
     private void LoadPhase1()
     {
-        foreach (var (app, running) in _appStates)
+        _checkItems = _appStates.Select(s => new AppCheckItem
         {
-            AppCheckList.Items.Add(new AppCheckItem
-            {
-                App          = app,
-                DisplayLabel = running ? app.Name : $"{app.Name}  (not running)",
-                IsChecked    = running
-            });
-        }
+            App          = s.App,
+            DisplayLabel = s.Running ? s.App.Name : $"{s.App.Name}  (not running)",
+            IsChecked    = s.Running
+        }).ToList();
+
+        AppCheckList.ItemsSource = _checkItems;
     }
 
     private void Restart_Click(object sender, RoutedEventArgs e)
     {
-        var selected = AppCheckList.Items
-            .OfType<AppCheckItem>()
+        var selected = _checkItems
             .Where(item => item.IsChecked)
             .Select(item => item.App)
             .ToList();
@@ -55,12 +58,11 @@ public partial class RestartWindow : Window
     {
         Title = "TrayBaked — Restarting…";
         HeaderSubtitle.Text = "Restarting applications…";
-        Topmost = false;
 
-        Phase1Panel.Visibility   = Visibility.Collapsed;
-        Phase1Buttons.Visibility = Visibility.Collapsed;
-        Phase2List.Visibility    = Visibility.Visible;
-        Phase2Buttons.Visibility = Visibility.Visible;
+        Phase1Panel.Visibility      = Visibility.Collapsed;
+        Phase1Buttons.Visibility    = Visibility.Collapsed;
+        Phase2ListBorder.Visibility = Visibility.Visible;
+        Phase2Buttons.Visibility    = Visibility.Visible;
 
         foreach (var app in apps)
         {
@@ -68,7 +70,7 @@ public partial class RestartWindow : Window
             _statusItems.Add(item);
         }
 
-        Phase2List.ItemsSource = _statusItems;
+        Phase2Grid.ItemsSource = _statusItems;
 
         var progress = new Progress<RestartStatus>(OnProgress);
         _ = AppLauncher.RestartAppsAsync(apps, progress);
@@ -83,7 +85,12 @@ public partial class RestartWindow : Window
         item.Kind       = status.Kind;
 
         if (status.Kind is StatusKind.Success or StatusKind.Error)
+        {
             _finalCount++;
+            ActivityLog.Add(status.Kind == StatusKind.Success
+                ? $"{status.AppName} restarted"
+                : $"{status.AppName}: {status.StatusText}");
+        }
 
         if (_finalCount >= _statusItems.Count)
         {
@@ -93,17 +100,47 @@ public partial class RestartWindow : Window
         }
     }
 
+    private void AppCheckList_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        // Let the CheckBox handle its own clicks normally
+        if (FindAncestor<CheckBox>(e.OriginalSource as DependencyObject) != null) return;
+
+        var row = FindAncestor<DataGridRow>(e.OriginalSource as DependencyObject);
+        if (row?.DataContext is AppCheckItem item)
+            item.IsChecked = !item.IsChecked;
+    }
+
+    private static T? FindAncestor<T>(DependencyObject? obj) where T : DependencyObject
+    {
+        while (obj != null)
+        {
+            if (obj is T t) return t;
+            obj = VisualTreeHelper.GetParent(obj);
+        }
+        return null;
+    }
+
     private void Cancel_Click(object sender, RoutedEventArgs e)   { DialogResult = false; Close(); }
     private void CloseBtn_Click(object sender, RoutedEventArgs e)  { Close(); }
 }
 
 // ─── View-models ─────────────────────────────────────────────────────────────
 
-public class AppCheckItem
+public class AppCheckItem : INotifyPropertyChanged
 {
     public required WatchedApp App          { get; init; }
     public required string     DisplayLabel { get; init; }
-    public          bool       IsChecked    { get; set;  }
+
+    private bool _isChecked;
+    public bool IsChecked
+    {
+        get => _isChecked;
+        set { _isChecked = value; OnPropertyChanged(); }
+    }
+
+    public event PropertyChangedEventHandler? PropertyChanged;
+    private void OnPropertyChanged([CallerMemberName] string? name = null)
+        => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
 }
 
 public class RestartStatusItem : INotifyPropertyChanged

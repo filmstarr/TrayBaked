@@ -6,7 +6,7 @@
         ResizeMode="NoResize"
         WindowStartupLocation="CenterScreen"
         Topmost="True"
-        Background="{StaticResource WindowBg}"
+        Background="{DynamicResource WindowBg}"
         FontFamily="Segoe UI">
 
     <Grid>
@@ -18,8 +18,8 @@
 
         <!-- ── Header ────────────────────────────────────────────────────── -->
         <Border Grid.Row="0"
-                Background="{StaticResource HeaderBg}"
-                BorderBrush="{StaticResource BorderBrush}"
+                Background="{DynamicResource HeaderBg}"
+                BorderBrush="{DynamicResource BorderBrush}"
                 BorderThickness="0,0,0,1"
                 Padding="16,12">
             <StackPanel Orientation="Horizontal">
@@ -32,7 +32,7 @@
                     <TextBlock x:Name="HeaderSubtitle"
                                Text="Explorer restarted"
                                FontSize="12"
-                               Foreground="{StaticResource TextSecondary}"/>
+                               Foreground="{DynamicResource TextSecondary}"/>
                 </StackPanel>
             </StackPanel>
         </Border>
@@ -48,45 +48,80 @@
                        Text="Select applications to restart:"
                        Margin="0,0,0,8"/>
 
-            <ListBox Grid.Row="1" x:Name="AppCheckList">
-                <ListBox.ItemTemplate>
-                    <DataTemplate>
-                        <CheckBox IsChecked="{Binding IsChecked, Mode=TwoWay}"
-                                  Content="{Binding DisplayLabel}"
-                                  Padding="4,2"/>
-                    </DataTemplate>
-                </ListBox.ItemTemplate>
-            </ListBox>
+            <Border Grid.Row="1"
+                    BorderBrush="{DynamicResource BorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="4"
+                    ClipToBounds="True">
+                <DataGrid x:Name="AppCheckList"
+                          BorderThickness="0"
+                          AutoGenerateColumns="False"
+                          CanUserAddRows="False"
+                          CanUserDeleteRows="False"
+                          CanUserSortColumns="False"
+                          HeadersVisibility="None"
+                          IsReadOnly="False"
+                          RowStyle="{StaticResource DataGridRowFlat}"
+                          CellStyle="{StaticResource DataGridCellFlat}"
+                          PreviewMouseLeftButtonDown="AppCheckList_PreviewMouseLeftButtonDown">
+                    <DataGrid.Columns>
+                        <DataGridTemplateColumn Width="36" CanUserResize="False">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <CheckBox IsChecked="{Binding IsChecked, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                              HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"
+                                              FocusVisualStyle="{x:Null}"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <DataGridTextColumn Width="*"
+                                            Binding="{Binding DisplayLabel}"
+                                            IsReadOnly="True"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Border>
         </Grid>
 
         <!-- ── Phase 2: progress view ─────────────────────────────────────── -->
-        <ListView Grid.Row="1"
-                  x:Name="Phase2List"
-                  Margin="16,12,16,8"
-                  Visibility="Collapsed">
-            <ListView.View>
-                <GridView>
-                    <GridViewColumn Header="Application" Width="220"
-                                    DisplayMemberBinding="{Binding AppName}"/>
-                    <GridViewColumn Header="Status" Width="200">
-                        <GridViewColumn.CellTemplate>
+        <Border Grid.Row="1"
+                x:Name="Phase2ListBorder"
+                Margin="16,12,16,8"
+                BorderBrush="{DynamicResource BorderBrush}"
+                BorderThickness="1"
+                CornerRadius="4"
+                ClipToBounds="True"
+                Visibility="Collapsed">
+            <DataGrid x:Name="Phase2Grid"
+                      BorderThickness="0"
+                      AutoGenerateColumns="False"
+                      CanUserAddRows="False"
+                      CanUserDeleteRows="False"
+                      CanUserSortColumns="False"
+                      IsReadOnly="True"
+                      RowStyle="{StaticResource DataGridRowFlat}"
+                      CellStyle="{StaticResource DataGridCellFlat}">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Application" Width="220"
+                                        Binding="{Binding AppName}"/>
+                    <DataGridTemplateColumn Header="Status" Width="*">
+                        <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
-                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center"
-                                            Margin="6,0,0,0">
-                                    <TextBlock x:Name="Icon"
-                                               Width="18"
-                                               FontSize="13"
-                                               FontWeight="SemiBold"
-                                               VerticalAlignment="Center"
-                                               Margin="0,0,5,0"/>
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                     <TextBlock x:Name="StatusLabel"
                                                Text="{Binding StatusText}"
                                                VerticalAlignment="Center"
                                                Foreground="{DynamicResource TextSecondary}"/>
+                                    <TextBlock x:Name="Icon"
+                                               Width="18"
+                                               FontSize="13"
+                                               FontWeight="Normal"
+                                               VerticalAlignment="Center"
+                                               Margin="4,0,0,0"/>
                                 </StackPanel>
                                 <DataTemplate.Triggers>
                                     <DataTrigger Binding="{Binding Kind}" Value="Success">
-                                        <Setter TargetName="Icon"        Property="Text"       Value="✔"/>
+                                        <Setter TargetName="Icon"        Property="Text"       Value="✓"/>
                                         <Setter TargetName="Icon"        Property="Foreground" Value="#107C10"/>
                                         <Setter TargetName="StatusLabel" Property="Foreground" Value="#107C10"/>
                                     </DataTrigger>
@@ -101,16 +136,16 @@
                                     </DataTrigger>
                                 </DataTemplate.Triggers>
                             </DataTemplate>
-                        </GridViewColumn.CellTemplate>
-                    </GridViewColumn>
-                </GridView>
-            </ListView.View>
-        </ListView>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                </DataGrid.Columns>
+            </DataGrid>
+        </Border>
 
         <!-- ── Footer ────────────────────────────────────────────────────── -->
         <Border Grid.Row="2"
-                Background="{StaticResource FooterBg}"
-                BorderBrush="{StaticResource BorderBrush}"
+                Background="{DynamicResource FooterBg}"
+                BorderBrush="{DynamicResource BorderBrush}"
                 BorderThickness="0,1,0,0"
                 Padding="16,10">
             <Grid>

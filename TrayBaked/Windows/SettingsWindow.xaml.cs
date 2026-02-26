@@ -188,6 +188,12 @@ public partial class SettingsWindow : Window
         var cell = FindAncestor<DataGridCell>(e.OriginalSource as DependencyObject);
         if (cell == null || cell.IsEditing || cell.IsReadOnly) return;
 
+        // Commit any in-progress edit, then explicitly move CurrentCell to the
+        // clicked cell before calling BeginEdit — otherwise BeginEdit operates
+        // on the old CurrentCell (still the previous column) because the DataGrid
+        // hasn't processed its own click handler yet at PreviewMouseLeftButtonDown time.
+        AppsGrid.CommitEdit(DataGridEditingUnit.Cell, exitEditingMode: true);
+        AppsGrid.CurrentCell = new DataGridCellInfo(cell);
         cell.Focus();
         AppsGrid.BeginEdit();
     }
