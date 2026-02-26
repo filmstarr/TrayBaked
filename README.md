@@ -1,6 +1,6 @@
 ## TrayBaked
 
-TrayBaked is a small Windows tray application that helps you recover your workflow after `explorer.exe` restarts (for example after a crash, Windows update, or when you restart Explorer manually). It watches for Explorer being restarted and then offers to restart your own applications so you do not need to hunt them down and launch them one by one.
+TrayBaked is a small Windows tray application that helps you restart your applications after `explorer.exe` restarts (for example after a crash, Windows update, or when you restart Explorer manually). It watches for Explorer being restarted and then offers to restart your own applications so you do not need to hunt them down and launch them one by one. Especially useful for applications that don't reregister with the system tray correctly.
 
 The app is built with WPF on .NET and runs quietly in the system tray.
 
@@ -41,9 +41,9 @@ Once running, TrayBaked lives in the system tray (notification area).
   - **Right‑click** the TrayBaked icon.
   - Use the menu items to open settings, restart apps, view the activity log, restart Explorer, or exit.
 
-- **Open the activity log**
+- **Open the settings**
   - **Left‑click** the tray icon.
-  - This opens a window listing recent Explorer restarts and application restart events.
+  - This opens the settings window.
 
 ---
 
@@ -61,9 +61,6 @@ Once running, TrayBaked lives in the system tray (notification area).
 3. **Save**
    - Click **Save** in the settings window.
    - The configuration is persisted and used the next time Explorer restarts.
-
-4. **Debounce settings**
-   - In settings, you can adjust how long TrayBaked waits after detecting an Explorer restart before acting (to avoid reacting to multiple rapid restarts).
 
 ---
 
