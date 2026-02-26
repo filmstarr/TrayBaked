@@ -222,7 +222,6 @@ class TrayAppContext : IDisposable
                 var toRestart = appStates.Where(s => s.Running).Select(s => s.App).ToList();
                 if (toRestart.Count > 0)
                 {
-                    _monitor.Suppress(TimeSpan.FromSeconds(30));
                     await AppLauncher.RestartAppsAsync(toRestart,
                         new Progress<RestartStatus>(LogRestartStatus));
                 }
@@ -268,7 +267,6 @@ class TrayAppContext : IDisposable
         switch (arg)
         {
             case "restart-all":
-                _monitor.Suppress(TimeSpan.FromSeconds(30));
                 await AppLauncher.RestartAppsAsync(appStates.Select(s => s.App),
                     new Progress<RestartStatus>(LogRestartStatus));
                 break;
@@ -277,7 +275,6 @@ class TrayAppContext : IDisposable
                 var running = appStates.Where(s => s.Running).Select(s => s.App).ToList();
                 if (running.Count > 0)
                 {
-                    _monitor.Suppress(TimeSpan.FromSeconds(30));
                     await AppLauncher.RestartAppsAsync(running,
                         new Progress<RestartStatus>(LogRestartStatus));
                 }

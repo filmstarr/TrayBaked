@@ -1,3 +1,4 @@
+using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
@@ -60,7 +61,7 @@ public partial class SettingsWindow : Window
     private void LoadData()
     {
         _rows.Clear();
-        foreach (var app in _config.Apps)
+        foreach (var app in _config.Apps.OrderBy(a => a.Name, StringComparer.OrdinalIgnoreCase))
         {
             var row = new WatchedAppRow
             {
@@ -157,6 +158,9 @@ public partial class SettingsWindow : Window
                                    : row.StartCommand.Trim()
             });
         }
+
+        // Keep saved apps sorted by display name
+        _config.Apps.Sort((a, b) => string.Compare(a.Name, b.Name, StringComparison.OrdinalIgnoreCase));
 
         try
         {

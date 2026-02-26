@@ -1,3 +1,4 @@
+using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
@@ -32,12 +33,15 @@ public partial class RestartWindow : Window
 
     private void LoadPhase1()
     {
-        _checkItems = _appStates.Select(s => new AppCheckItem
-        {
-            App          = s.App,
-            DisplayLabel = s.Running ? s.App.Name : $"{s.App.Name}  (not running)",
-            IsChecked    = s.Running
-        }).ToList();
+        _checkItems = _appStates
+            .OrderBy(s => s.App.Name, StringComparer.OrdinalIgnoreCase)
+            .Select(s => new AppCheckItem
+            {
+                App          = s.App,
+                DisplayLabel = s.Running ? s.App.Name : $"{s.App.Name}  (not running)",
+                IsChecked    = s.Running
+            })
+            .ToList();
 
         AppCheckList.ItemsSource = _checkItems;
     }
