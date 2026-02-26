@@ -60,21 +60,57 @@
                           CanUserDeleteRows="False"
                           BorderThickness="0"
                           PreviewMouseLeftButtonDown="AppsGrid_PreviewMouseLeftButtonDown">
+                    <!-- Remove row selection highlight just for this grid -->
+                    <DataGrid.RowStyle>
+                        <Style TargetType="DataGridRow">
+                            <Setter Property="Background" Value="Transparent"/>
+                            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
+                        </Style>
+                    </DataGrid.RowStyle>
+                    <DataGrid.CellStyle>
+                        <Style TargetType="DataGridCell">
+                            <Setter Property="Padding"          Value="10,0"/>
+                            <Setter Property="BorderThickness"  Value="0"/>
+                            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="DataGridCell">
+                                        <Border x:Name="Bd"
+                                                Background="Transparent"
+                                                BorderThickness="{TemplateBinding BorderThickness}"
+                                                Padding="{TemplateBinding Padding}">
+                                            <ContentPresenter VerticalAlignment="Center"/>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <!-- Keep selected text using themed colour even when window loses focus -->
+                                            <Trigger Property="IsSelected" Value="True">
+                                                <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </DataGrid.CellStyle>
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="Display Name"
                                             Width="*" MinWidth="110"
-                                            Binding="{Binding Name, UpdateSourceTrigger=PropertyChanged}"/>
+                                            Binding="{Binding Name, UpdateSourceTrigger=PropertyChanged}"
+                                            EditingElementStyle="{StaticResource GridTextEditStyle}"/>
                         <DataGridTextColumn Header="Process Name"
                                             Width="*" MinWidth="100"
-                                            Binding="{Binding ProcessName, UpdateSourceTrigger=PropertyChanged}"/>
+                                            Binding="{Binding ProcessName, UpdateSourceTrigger=PropertyChanged}"
+                                            EditingElementStyle="{StaticResource GridTextEditStyle}"/>
                         <DataGridTextColumn Header="App Command"
                                             Width="2*" MinWidth="140"
-                                            Binding="{Binding StartCommand, UpdateSourceTrigger=PropertyChanged}"/>
+                                            Binding="{Binding StartCommand, UpdateSourceTrigger=PropertyChanged}"
+                                            EditingElementStyle="{StaticResource GridTextEditStyle}"/>
                         <DataGridTemplateColumn Width="40" MinWidth="40" CanUserResize="False">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <Button Style="{StaticResource DeleteRowButton}"
                                             Content="✕"
+                                            ToolTip="Delete"
                                             Click="DeleteRow_Click"
                                             VerticalAlignment="Center"
                                             HorizontalAlignment="Center"/>

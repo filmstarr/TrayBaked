@@ -5,6 +5,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Threading;
 using Microsoft.Win32;
 using TrayBaked.Models;
 
@@ -35,6 +36,25 @@ public partial class SettingsWindow : Window
 
         AppsGrid.ItemsSource = _rows;
         LoadData();
+
+        Loaded += SettingsWindow_Loaded;
+    }
+
+    private void SettingsWindow_Loaded(object? sender, RoutedEventArgs e)
+    {
+        if (_rows.Count == 0) return;
+
+        var newRow = _rows[^1]; // trailing blank "add" row
+        AppsGrid.SelectedItem = newRow;
+        AppsGrid.ScrollIntoView(newRow);
+
+        if (AppsGrid.Columns.Count == 0) return;
+
+        AppsGrid.CurrentCell = new DataGridCellInfo(newRow, AppsGrid.Columns[0]);
+        AppsGrid.Dispatcher.BeginInvoke(new Action(() =>
+        {
+            AppsGrid.BeginEdit();
+        }), DispatcherPriority.Background);
     }
 
     private void LoadData()

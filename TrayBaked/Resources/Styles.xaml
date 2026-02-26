@@ -23,6 +23,30 @@
         <Setter Property="Margin"      Value="0,0,0,8"/>
     </Style>
 
+    <!-- ═══════════════════════════  ToolTips  ══════════════════════════════ -->
+
+    <Style TargetType="ToolTip">
+        <Setter Property="Background"      Value="{DynamicResource SurfaceBrush}"/>
+        <Setter Property="Foreground"      Value="{DynamicResource TextPrimary}"/>
+        <Setter Property="BorderBrush"     Value="{DynamicResource BorderBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Padding"         Value="8,4"/>
+        <Setter Property="FontSize"        Value="12"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ToolTip">
+                    <Border Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="4"
+                            Padding="{TemplateBinding Padding}">
+                        <ContentPresenter/>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <!-- ═══════════════════════════  Buttons  ═══════════════════════════════ -->
 
     <!-- Primary (accent-filled) -->
@@ -141,6 +165,17 @@
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
+        <Style.Triggers>
+            <!-- Hide delete button on the trailing blank "new entry" row -->
+            <MultiDataTrigger>
+                <MultiDataTrigger.Conditions>
+                    <Condition Binding="{Binding Name}"         Value=""/>
+                    <Condition Binding="{Binding ProcessName}"  Value=""/>
+                    <Condition Binding="{Binding StartCommand}" Value=""/>
+                </MultiDataTrigger.Conditions>
+                <Setter Property="Visibility" Value="Collapsed"/>
+            </MultiDataTrigger>
+        </Style.Triggers>
     </Style>
 
     <!-- ═══════════════════════════  TextBox  ═══════════════════════════════ -->
@@ -186,6 +221,25 @@
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
+    </Style>
+
+    <Style x:Key="GridTextEditStyle" TargetType="TextBox">
+        <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
+
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="TextBox">
+                    <Border Background="{TemplateBinding Background}"
+                            BorderBrush="{DynamicResource AccentPressBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="2"
+                            Padding="2">
+                        <ScrollViewer x:Name="PART_ContentHost" Margin="{TemplateBinding Padding}"/>
+                    </Border>     
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>   
     </Style>
 
     <!-- ═══════════════════════════  CheckBox  ══════════════════════════════ -->
@@ -251,8 +305,9 @@
                                 <TextBlock x:Name="SortArrow"
                                            Grid.Column="1"
                                            Text="▲"
-                                           Foreground="{DynamicResource AccentBrush}"
+                                           Foreground="{DynamicResource TextPrimary}"
                                            FontSize="10"
+                                           LineHeight="10"
                                            Margin="4,0,2,0"
                                            VerticalAlignment="Center"
                                            Visibility="Collapsed"/>
