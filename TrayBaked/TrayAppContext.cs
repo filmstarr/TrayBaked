@@ -189,7 +189,7 @@ class TrayAppContext : IDisposable
         _config = config;
         ConfigManager.Save(config);
         _monitor.UpdateDebounce(config.DebounceSeconds);
-        ActivityLog.Add("Application list updated");
+        ActivityLog.Add("Application settings updated");
     }
 
     private void OnExplorerRestarted(object? sender, EventArgs e)
