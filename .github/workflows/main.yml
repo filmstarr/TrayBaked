@@ -16,53 +16,47 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4.1.0
-    
+
     - name: Setup MSBuild
       uses: microsoft/setup-msbuild@v1
 
-    - name: Navigate to Workspace
-      run: cd $GITHUB_WORKSPACE
-
-    - name: Version Patcher
+    - name: Patch Project Version
       run: |
-        $csprojs = Get-ChildItem -Recurse | Where-Object {$_.Name -clike "*.csproj"}
-        foreach ($csproj in $csprojs)
-        {
-          $versions = Select-Xml -Path $csproj.FullName -XPath "//Version"
-          foreach ($version in $versions){
-            $version.Node.InnerText = '${{ env.version }}'
-          }
-          $versionPrefixes = Select-Xml -Path $csproj.FullName -XPath "//VersionPrefix"
-          foreach ($versionPrefix in $versionPrefixes){
-            $versionPrefix.Node.InnerText = '${{ env.version }}'
-          }
-
-          if ($versions -ne $null)
-          {
-            $versions.Node.OwnerDocument.Save($csproj.FullName)
-          }
-          elseif ($versionPrefixes -ne $null)
-          {
-            $versionPrefixes.Node.OwnerDocument.Save($csproj.FullName)
-          }
+        $csproj = "TrayBaked\TrayBaked.csproj"
+        $versions = Select-Xml -Path $csproj -XPath "//Version"
+        foreach ($version in $versions){
+          $version.Node.InnerText = '${{ env.version }}'
+        }
+        $versionPrefixes = Select-Xml -Path $csproj -XPath "//VersionPrefix"
+        foreach ($versionPrefix in $versionPrefixes){
+          $versionPrefix.Node.InnerText = '${{ env.version }}'
         }
 
-    - name: Build and Publish Projects
+        if ($versions -ne $null) { $versions.Node.OwnerDocument.Save($csproj) }
+        elseif ($versionPrefixes -ne $null) { $versionPrefixes.Node.OwnerDocument.Save($csproj) }
+
+    - name: Build and Publish TrayBaked
       run: |
-        foreach ($project in '${{ vars.Projects }}'.Split([Environment]::NewLine))
-        {
-          if (![string]::IsNullOrWhiteSpace($project))
-          {
-            $name = [System.IO.Path]::GetFileNameWithoutExtension($project)
-            $outputFolder = "publish/$name"
-            dotnet publish $project `
-              -c Release `
-              -r win-x64 `
-              --self-contained false `
-              /p:PublishSingleFile=false `
-              --output $outputFolder
-          }
-        }
+        dotnet publish TrayBaked\TrayBaked.csproj `
+          -c Release `
+          -r win-x64 `
+          --self-contained false `
+          /p:PublishSingleFile=false `
+          --output publish/TrayBaked
+
+    - name: Patch Installer Version
+      run: |
+        $installerPath = "installer\TrayBaked.iss"
+        (Get-Content $installerPath) |
+          ForEach-Object { $_ -replace '{#MyAppVersion}', '${{ env.version }}' } |
+          Set-Content $installerPath
+
+    - name: Install Inno Setup
+      uses: ilammy/Setup-Inno-Setup@v2
+
+    - name: Build Installer
+      run: |
+        iscc installer\TrayBaked.iss
 
     - name: Create GitHub Release
       id: create_release
@@ -76,26 +70,15 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Upload Release Artifacts
-      if: vars.Releases != '_'
+    - name: Upload Installer to Release
       shell: pwsh
       run: |
-        $filesToUpload = @()
-        foreach ($releasePath in '${{ vars.Releases }}'.Split([Environment]::NewLine))
-        {
-          if (![string]::IsNullOrWhiteSpace($releasePath))
-          {
-            $path = $releasePath.Trim()
-            if (Test-Path $path) {
-              $filesToUpload += (Get-ChildItem -Path $path -Recurse | ForEach-Object { $_.FullName })
-            }
-          }
-        }
-
-        foreach ($file in $filesToUpload)
-        {
-          Write-Host "Uploading $file to release"
-          gh release upload "v${{ env.version }}" "$file" --clobber
+        $installerExe = "installer\Output\TrayBakedInstaller.exe"
+        if (Test-Path $installerExe) {
+          Write-Host "Uploading $installerExe to release"
+          gh release upload "v${{ env.version }}" "$installerExe" --clobber
+        } else {
+          Write-Error "Installer EXE not found!"
         }
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
