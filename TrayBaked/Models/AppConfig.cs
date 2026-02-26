@@ -10,5 +10,6 @@ public class WatchedApp
 public class AppConfig
 {
     public int DebounceSeconds { get; set; } = 10;
-    public List<WatchedApp> Apps { get; set; } = new();
+    public bool AutoRestart { get; set; } = false;
+    public List<WatchedApp> Apps { get; set; } = [];
 }

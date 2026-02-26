@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dotnet build TrayBaked/TrayBaked.csproj)",
+      "Bash(dotnet build TrayBaked/TrayBaked.csproj -v minimal)"
+    ]
+  }
+}

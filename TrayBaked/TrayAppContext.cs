@@ -1,29 +1,53 @@
 using System.Diagnostics;
-using TrayBaked.Forms;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using TrayBaked.Models;
+using TrayBaked.Windows;
+
+// Resolve ambiguity: both UseWpf and UseWindowsForms expose an 'Application' type
+using Application = System.Windows.Application;
 
 namespace TrayBaked;
 
-class TrayAppContext : ApplicationContext
+/// <summary>
+/// Manages the system-tray icon and application lifecycle.
+/// Uses a styled WPF ContextMenu (not WinForms ContextMenuStrip) so the menu
+/// inherits the application theme and Windows 11 visual style.
+/// </summary>
+class TrayAppContext : IDisposable
 {
-    private readonly NotifyIcon _trayIcon;
+    private readonly System.Windows.Forms.NotifyIcon _trayIcon;
     private readonly ExplorerMonitor _monitor;
     private AppConfig _config;
-    private readonly SynchronizationContext _uiContext;
     private bool _confirmationPending;
+    private bool _disposed;
+
+    // Lightweight hidden window that WPF requires as a placement target so that
+    // the ContextMenu closes properly when the user clicks elsewhere.
+    private Window? _menuOwner;
+
+    // Only one Settings window may be open at a time.
+    private SettingsWindow? _settingsWindow;
 
     public TrayAppContext()
     {
-        _uiContext = SynchronizationContext.Current ?? new WindowsFormsSynchronizationContext();
-
         _config = ConfigManager.Load();
 
-        _trayIcon = new NotifyIcon
+        _trayIcon = new System.Windows.Forms.NotifyIcon
         {
-            Icon = SystemIcons.Shield,
-            Text = "TrayBaked — Watching for Explorer restarts",
+            Icon    = AppIconHelper.GetTrayIcon(),
+            Text    = "TrayBaked — Watching for Explorer restarts",
             Visible = true,
-            ContextMenuStrip = BuildContextMenu()
+        };
+
+        // Left-click → Settings; right-click → context menu
+        _trayIcon.MouseUp += (_, e) =>
+        {
+            if (e.Button == System.Windows.Forms.MouseButtons.Left)
+                Application.Current.Dispatcher.BeginInvoke(OpenSettings);
+            else if (e.Button == System.Windows.Forms.MouseButtons.Right)
+                Application.Current.Dispatcher.BeginInvoke(OpenTrayMenu);
         };
 
         _monitor = new ExplorerMonitor(_config.DebounceSeconds);
@@ -31,27 +55,75 @@ class TrayAppContext : ApplicationContext
         _monitor.Start();
     }
 
-    private ContextMenuStrip BuildContextMenu()
+    // ── Tray context menu ────────────────────────────────────────────────────
+
+    private void OpenTrayMenu()
     {
-        var menu = new ContextMenuStrip();
-        menu.Items.Add("Restart Explorer", null, (_, _) => _ = RestartExplorerAsync());
-        menu.Items.Add("Settings...", null, OpenSettings);
-        menu.Items.Add(new ToolStripSeparator());
-        menu.Items.Add("Exit", null, (_, _) => ExitApplication());
+        // Create a 1×1 invisible helper window the first time.
+        // Show() + Activate() makes it the foreground window, so WPF knows to
+        // dismiss the ContextMenu when focus moves away from it.
+        if (_menuOwner == null)
+        {
+            _menuOwner = new Window
+            {
+                Width              = 1,
+                Height             = 1,
+                Opacity            = 0,
+                WindowStyle        = WindowStyle.None,
+                ShowInTaskbar      = false,
+                AllowsTransparency = true,
+                Background         = System.Windows.Media.Brushes.Transparent,
+                ResizeMode         = ResizeMode.NoResize,
+                Topmost            = true,
+            };
+        }
+
+        var menu             = BuildTrayMenu();
+        menu.Placement       = PlacementMode.MousePoint;
+        menu.PlacementTarget = _menuOwner;
+        menu.Closed         += (_, _) => _menuOwner.Hide();
+
+        _menuOwner.Show();
+        _menuOwner.Activate();
+        menu.IsOpen = true;
+    }
+
+    /// <summary>
+    /// Builds a fresh ContextMenu each time so any theme change since the last
+    /// open is reflected immediately.
+    /// </summary>
+    private ContextMenu BuildTrayMenu()
+    {
+        var app       = Application.Current;
+        var menuStyle = (Style?)app.TryFindResource("TrayMenuStyle");
+        var itemStyle = (Style?)app.TryFindResource("TrayMenuItemStyle");
+        var sepStyle  = (Style?)app.TryFindResource("TrayMenuSepStyle");
+
+        MenuItem Item(string header, RoutedEventHandler onClick)
+        {
+            var mi = new MenuItem { Header = header, Style = itemStyle };
+            mi.Click += onClick;
+            return mi;
+        }
+
+        var menu = new ContextMenu { Style = menuStyle };
+        menu.Items.Add(Item("Settings…",        (_, _) => OpenSettings()));
+        menu.Items.Add(Item("Restart Explorer", (_, _) => _ = RestartExplorerAsync()));
+        menu.Items.Add(new Separator            { Style = sepStyle });
+        menu.Items.Add(Item("Exit",             (_, _) => ExitApplication()));
         return menu;
     }
 
+    // ── Application actions ──────────────────────────────────────────────────
+
     private async Task RestartExplorerAsync()
     {
-        var procs = Process.GetProcessesByName("explorer");
-        foreach (var p in procs)
+        foreach (var p in Process.GetProcessesByName("explorer"))
         {
-            try { p.Kill(); }
-            catch { }
+            try { p.Kill(); } catch { }
         }
 
-        // Windows 10/11 restarts explorer.exe as the shell automatically after it exits.
-        // Poll for up to 5 seconds; only launch manually if it hasn't come back on its own.
+        // Windows restarts explorer.exe automatically; poll for 5 s before forcing it
         for (int i = 0; i < 10; i++)
         {
             await Task.Delay(500);
@@ -62,10 +134,20 @@ class TrayAppContext : ApplicationContext
         Process.Start(new ProcessStartInfo("explorer.exe") { UseShellExecute = true });
     }
 
-    private void OpenSettings(object? sender, EventArgs e)
+    private void OpenSettings()
     {
-        using var form = new SettingsForm(_config, SaveConfig);
-        form.ShowDialog();
+        if (_settingsWindow != null)
+        {
+            // Bring the existing window to the front rather than opening a second one.
+            if (_settingsWindow.WindowState == WindowState.Minimized)
+                _settingsWindow.WindowState = WindowState.Normal;
+            _settingsWindow.Activate();
+            return;
+        }
+
+        _settingsWindow = new SettingsWindow(_config, SaveConfig);
+        _settingsWindow.Closed += (_, _) => _settingsWindow = null;
+        _settingsWindow.ShowDialog();
     }
 
     private void SaveConfig(AppConfig config)
@@ -80,10 +162,10 @@ class TrayAppContext : ApplicationContext
         if (_confirmationPending) return;
         _confirmationPending = true;
 
-        // Wait 5 seconds for the taskbar to stabilize, then show the confirmation on the UI thread
+        // Wait for the taskbar / shell to stabilise, then marshal onto the WPF dispatcher
         Task.Delay(5000).ContinueWith(_ =>
         {
-            _uiContext.Post(_ => ShowConfirmation(), null);
+            Application.Current.Dispatcher.BeginInvoke(ShowConfirmation);
         });
     }
 
@@ -92,11 +174,12 @@ class TrayAppContext : ApplicationContext
         try
         {
             var appStates = _config.Apps
-                .Select(app => (App: app, Running: Process.GetProcessesByName(app.ProcessName).Length > 0))
+                .Select(app => (App: app,
+                                Running: Process.GetProcessesByName(app.ProcessName).Length > 0))
                 .ToList();
 
-            using var form = new RestartForm(appStates);
-            form.ShowDialog();
+            var win = new RestartWindow(appStates);
+            win.ShowDialog();
         }
         finally
         {
@@ -107,19 +190,16 @@ class TrayAppContext : ApplicationContext
     private void ExitApplication()
     {
         _monitor.Stop();
-        _monitor.Dispose();
         _trayIcon.Visible = false;
-        _trayIcon.Dispose();
-        Application.Exit();
+        Application.Current.Shutdown();
     }
 
-    protected override void Dispose(bool disposing)
+    public void Dispose()
     {
-        if (disposing)
-        {
-            _monitor.Dispose();
-            _trayIcon.Dispose();
-        }
-        base.Dispose(disposing);
+        if (_disposed) return;
+        _disposed = true;
+        _monitor.Dispose();
+        _trayIcon.Dispose();
+        _menuOwner?.Close();
     }
 }

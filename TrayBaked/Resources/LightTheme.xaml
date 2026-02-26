@@ -1,0 +1,27 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- Windows 11 Light Theme brushes -->
+
+    <SolidColorBrush x:Key="WindowBg"            Color="#F3F3F3"/>
+    <SolidColorBrush x:Key="HeaderBg"            Color="#E8E8E8"/>
+    <SolidColorBrush x:Key="FooterBg"            Color="#E8E8E8"/>
+    <SolidColorBrush x:Key="SurfaceBrush"        Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="BorderBrush"         Color="#DEDEDE"/>
+    <SolidColorBrush x:Key="TextPrimary"         Color="#1C1C1C"/>
+    <SolidColorBrush x:Key="TextSecondary"       Color="#767676"/>
+    <SolidColorBrush x:Key="AccentBrush"         Color="#0078D4"/>
+    <SolidColorBrush x:Key="AccentHoverBrush"    Color="#006CBD"/>
+    <SolidColorBrush x:Key="AccentPressBrush"    Color="#005BA1"/>
+    <SolidColorBrush x:Key="CtrlBg"              Color="#FBFBFB"/>
+    <SolidColorBrush x:Key="CtrlHoverBg"         Color="#EFEFEF"/>
+    <SolidColorBrush x:Key="CtrlPressBg"         Color="#DCDCDC"/>
+    <SolidColorBrush x:Key="RowSelectedBg"       Color="#E4F1FD"/>
+    <SolidColorBrush x:Key="RowHoverBg"          Color="#F0F0F0"/>
+    <SolidColorBrush x:Key="GridHeaderBg"        Color="#F0F0F0"/>
+    <SolidColorBrush x:Key="AlternatingRowBg"    Color="#FAFAFA"/>
+    <SolidColorBrush x:Key="MenuSurface"         Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="DeleteBtnHoverBg"    Color="#FDECEA"/>
+    <SolidColorBrush x:Key="DeleteBtnHoverFg"    Color="#C42B1C"/>
+
+</ResourceDictionary>

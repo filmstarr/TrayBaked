@@ -3,13 +3,14 @@
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWpf>true</UseWpf>
     <UseWindowsForms>true</UseWindowsForms>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <AssemblyName>TrayBaked</AssemblyName>
     <RootNamespace>TrayBaked</RootNamespace>
     <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <StartupObject>TrayBaked.Program</StartupObject>
   </PropertyGroup>
-
 
 </Project>

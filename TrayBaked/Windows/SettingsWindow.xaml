@@ -1,0 +1,135 @@
+<Window x:Class="TrayBaked.Windows.SettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="TrayBaked — Settings"
+        Width="700" Height="500"
+        MinWidth="580" MinHeight="420"
+        WindowStartupLocation="CenterScreen"
+        Background="{DynamicResource WindowBg}"
+        FontFamily="Segoe UI">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>  <!-- header -->
+            <RowDefinition Height="*"/>     <!-- content -->
+            <RowDefinition Height="Auto"/>  <!-- footer -->
+        </Grid.RowDefinitions>
+
+        <!-- ── Header ────────────────────────────────────────────────────── -->
+        <Border Grid.Row="0"
+                Background="{DynamicResource HeaderBg}"
+                BorderBrush="{DynamicResource BorderBrush}"
+                BorderThickness="0,0,0,1"
+                Padding="16,12">
+            <StackPanel Orientation="Horizontal">
+                <Image x:Name="HeaderIcon" Width="32" Height="32"
+                       Margin="0,0,12,0" VerticalAlignment="Center"
+                       RenderOptions.BitmapScalingMode="HighQuality"/>
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="TrayBaked"
+                               FontSize="16" FontWeight="SemiBold"/>
+                    <TextBlock Text="Settings"
+                               FontSize="12"
+                               Foreground="{DynamicResource TextSecondary}"/>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <!-- ── Content ───────────────────────────────────────────────────── -->
+        <Grid Grid.Row="1" Margin="16,14,16,8">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- Section label -->
+            <TextBlock Grid.Row="0"
+                       Text="Watched Applications"
+                       Style="{StaticResource SectionHeader}"/>
+
+            <!-- App list DataGrid — wrapped in a Border to get rounded corners -->
+            <Border Grid.Row="1"
+                    BorderBrush="{DynamicResource BorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="4"
+                    ClipToBounds="True">
+                <DataGrid x:Name="AppsGrid"
+                          AutoGenerateColumns="False"
+                          CanUserAddRows="False"
+                          CanUserDeleteRows="False"
+                          BorderThickness="0"
+                          PreviewMouseLeftButtonDown="AppsGrid_PreviewMouseLeftButtonDown">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Display Name"
+                                            Width="*" MinWidth="110"
+                                            Binding="{Binding Name, UpdateSourceTrigger=PropertyChanged}"/>
+                        <DataGridTextColumn Header="Process Name"
+                                            Width="*" MinWidth="100"
+                                            Binding="{Binding ProcessName, UpdateSourceTrigger=PropertyChanged}"/>
+                        <DataGridTextColumn Header="App Command"
+                                            Width="2*" MinWidth="140"
+                                            Binding="{Binding StartCommand, UpdateSourceTrigger=PropertyChanged}"/>
+                        <DataGridTemplateColumn Width="40" MinWidth="40" CanUserResize="False">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Button Style="{StaticResource DeleteRowButton}"
+                                            Content="✕"
+                                            Click="DeleteRow_Click"
+                                            VerticalAlignment="Center"
+                                            HorizontalAlignment="Center"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Border>
+
+            <!-- Row action buttons -->
+            <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,8,0,0">
+                <Button Content="From Process…" Click="CaptureProcess_Click"/>
+            </StackPanel>
+        </Grid>
+
+        <!-- ── Footer ────────────────────────────────────────────────────── -->
+        <Border Grid.Row="2"
+                Background="{DynamicResource FooterBg}"
+                BorderBrush="{DynamicResource BorderBrush}"
+                BorderThickness="0,1,0,0"
+                Padding="16,12">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Left: misc settings -->
+                <StackPanel Orientation="Vertical">
+                    <CheckBox x:Name="AutoRestartCheckbox"
+                          Grid.Column="0"
+                          Margin="0,0,0,4"
+                          VerticalAlignment="Center"
+                          Content="Auto restart applications without user confirmation"/>
+
+                    <CheckBox x:Name="AutoStartCheckbox"
+                          Grid.Column="0"
+                          Margin="0,0,0,4"
+                          VerticalAlignment="Center"
+                          Content="Start TrayBaked automatically with Windows"/>
+                </StackPanel>
+
+                <!-- Right: Save / Cancel -->
+                <StackPanel Grid.Column="1"
+                            Orientation="Horizontal"
+                            VerticalAlignment="Center">
+                    <Button Content="Cancel"
+                            Margin="0,0,8,0"
+                            Click="Cancel_Click"/>
+                    <Button Content="Save"
+                            Style="{StaticResource PrimaryButton}"
+                            Click="Save_Click"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

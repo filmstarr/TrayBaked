@@ -1,0 +1,116 @@
+<Window x:Class="TrayBaked.Windows.PickProcessWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="TrayBaked — Add from Running Process"
+        Width="900" Height="500"
+        MinWidth="720" MinHeight="420"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource WindowBg}"
+        FontFamily="Segoe UI">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>  <!-- header -->
+            <RowDefinition Height="Auto"/>  <!-- filter bar -->
+            <RowDefinition Height="*"/>     <!-- list -->
+            <RowDefinition Height="Auto"/>  <!-- footer -->
+        </Grid.RowDefinitions>
+
+        <!-- ── Header ────────────────────────────────────────────────────── -->
+        <Border Grid.Row="0"
+                Background="{DynamicResource HeaderBg}"
+                BorderBrush="{DynamicResource BorderBrush}"
+                BorderThickness="0,0,0,1"
+                Padding="16,12">
+            <StackPanel Orientation="Horizontal">
+                <Image x:Name="HeaderIcon" Width="32" Height="32"
+                       Margin="0,0,12,0" VerticalAlignment="Center"
+                       RenderOptions.BitmapScalingMode="HighQuality"/>
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="TrayBaked"
+                               FontSize="16" FontWeight="SemiBold"/>
+                    <TextBlock Text="Add from Running Process"
+                               FontSize="12"
+                               Foreground="{DynamicResource TextSecondary}"/>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <!-- ── Filter bar ─────────────────────────────────────────────────── -->
+        <Grid Grid.Row="1" Margin="16,12,16,8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <TextBlock Grid.Column="0"
+                       Text="Filter:"
+                       VerticalAlignment="Center"
+                       Margin="0,0,8,0"/>
+            <TextBox Grid.Column="1"
+                     x:Name="FilterBox"
+                     TextChanged="FilterBox_TextChanged"/>
+            <Button Grid.Column="2"
+                    Content="Refresh"
+                    Margin="8,0,0,0"
+                    Click="Refresh_Click"/>
+        </Grid>
+
+        <!-- ── Process list ───────────────────────────────────────────────── -->
+        <Border Grid.Row="2"
+                Margin="16,0,16,0"
+                BorderBrush="{DynamicResource BorderBrush}"
+                BorderThickness="1"
+                CornerRadius="4"
+                ClipToBounds="True">
+            <DataGrid x:Name="ProcessGrid"
+                      BorderThickness="0"
+                      AutoGenerateColumns="False"
+                      IsReadOnly="True"
+                      CanUserAddRows="False"
+                      CanUserDeleteRows="False"
+                      MouseDoubleClick="ProcessGrid_DoubleClick">
+                <DataGrid.RowStyle>
+                    <Style TargetType="DataGridRow" BasedOn="{StaticResource {x:Type DataGridRow}}">
+                        <Style.Triggers>
+                            <!-- Accent-colour tint for Microsoft Store apps -->
+                            <DataTrigger Binding="{Binding IsStore}" Value="True">
+                                <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </DataGrid.RowStyle>
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Display Name"  Width="210"
+                                        Binding="{Binding DisplayName}"/>
+                    <DataGridTextColumn Header="Process Name"  Width="160"
+                                        Binding="{Binding ProcessName}"/>
+                    <DataGridTextColumn Header="PID"           Width="56"
+                                        Binding="{Binding Pid}"/>
+                    <DataGridTextColumn Header="Type"          Width="64"
+                                        Binding="{Binding TypeText}"/>
+                    <DataGridTextColumn Header="Path / AUMID"  Width="340"
+                                        Binding="{Binding StartCommand}"/>
+                </DataGrid.Columns>
+            </DataGrid>
+        </Border>
+
+        <!-- ── Footer ────────────────────────────────────────────────────── -->
+        <Border Grid.Row="3"
+                Background="{DynamicResource FooterBg}"
+                BorderBrush="{DynamicResource BorderBrush}"
+                BorderThickness="0,1,0,0"
+                Padding="16,10">
+            <StackPanel Orientation="Horizontal"
+                        HorizontalAlignment="Right">
+                <Button Content="Cancel"
+                        Margin="0,0,8,0"
+                        Click="Cancel_Click"/>
+                <Button Content="Add"
+                        Style="{StaticResource PrimaryButton}"
+                        Click="Add_Click"/>
+            </StackPanel>
+        </Border>
+    </Grid>
+</Window>
