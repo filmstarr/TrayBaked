@@ -3,7 +3,10 @@ name: DotNet Core Build
 on:
   push:
     branches: main
-  
+
+permissions:
+  contents: write
+
 env:
   version: ${{ vars.MajorVersion }}.${{ vars.MinorVersion }}.${{ github.run_number }}
 
