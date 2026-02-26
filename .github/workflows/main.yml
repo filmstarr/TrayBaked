@@ -55,7 +55,7 @@ jobs:
               -c Release `
               -r win-x64 `
               --self-contained false `
-              /p:PublishSingleFile=true `
+              /p:PublishSingleFile=false `
               --output publish/$name
           }
         }
