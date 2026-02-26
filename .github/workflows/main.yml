@@ -54,7 +54,7 @@ jobs:
             dotnet publish $project `
               -c Release `
               -r win-x64 `
-              --self-contained true `
+              --self-contained false `
               /p:PublishSingleFile=true `
               --output publish/$name
           }
