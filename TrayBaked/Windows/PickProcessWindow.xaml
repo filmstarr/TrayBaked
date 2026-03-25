@@ -51,15 +51,16 @@
             <TextBox Grid.Column="1"
                      x:Name="FilterBox"
                      TextChanged="FilterBox_TextChanged"/>
-            <Button Grid.Column="2"
+            <Button x:Name="RefreshButton"
+                    Grid.Column="2"
                     Content="Refresh"
                     Margin="8,0,0,0"
                     Click="Refresh_Click"/>
         </Grid>
 
         <!-- ── Process list ───────────────────────────────────────────────── -->
-        <Border Grid.Row="2"
-                Margin="16,0,16,0"
+        <Grid Grid.Row="2">
+        <Border Margin="16,0,16,0"
                 BorderBrush="{DynamicResource BorderBrush}"
                 BorderThickness="1"
                 CornerRadius="4"
@@ -94,6 +95,42 @@
                 </DataGrid.Columns>
             </DataGrid>
         </Border>
+
+        <!-- ── Loading overlay ───────────────────────────────────────────── -->
+        <Grid x:Name="LoadingOverlay"
+              Margin="16,0,16,0"
+              Background="{DynamicResource WindowBg}"
+              Opacity="0.85">
+            <Canvas Width="40" Height="40"
+                    HorizontalAlignment="Center" VerticalAlignment="Center">
+                <Canvas.RenderTransform>
+                    <RotateTransform x:Name="SpinnerRotate" CenterX="20" CenterY="20"/>
+                </Canvas.RenderTransform>
+                <Canvas.Triggers>
+                    <EventTrigger RoutedEvent="FrameworkElement.Loaded">
+                        <BeginStoryboard>
+                            <Storyboard RepeatBehavior="Forever">
+                                <DoubleAnimation Storyboard.TargetName="SpinnerRotate"
+                                                 Storyboard.TargetProperty="Angle"
+                                                 From="0" To="360" Duration="0:0:0.75"/>
+                            </Storyboard>
+                        </BeginStoryboard>
+                    </EventTrigger>
+                </Canvas.Triggers>
+                <Path Stroke="{DynamicResource AccentBrush}" StrokeThickness="3.5"
+                      StrokeStartLineCap="Round" StrokeEndLineCap="Round">
+                    <Path.Data>
+                        <PathGeometry>
+                            <PathFigure StartPoint="20,2">
+                                <ArcSegment Point="2,20" Size="18,18"
+                                            SweepDirection="Clockwise" IsLargeArc="True"/>
+                            </PathFigure>
+                        </PathGeometry>
+                    </Path.Data>
+                </Path>
+            </Canvas>
+        </Grid>
+        </Grid>
 
         <!-- ── Footer ────────────────────────────────────────────────────── -->
         <Border Grid.Row="3"
