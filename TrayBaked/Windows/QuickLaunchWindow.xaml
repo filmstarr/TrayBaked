@@ -1,0 +1,35 @@
+<Window x:Class="TrayBaked.Windows.QuickLaunchWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        ShowInTaskbar="False"
+        Topmost="True"
+        ResizeMode="NoResize">
+
+    <!--
+        Outer transparent border gives the drop shadow room to render
+        without clipping at the popup boundary.
+    -->
+    <Border Padding="10" Background="Transparent">
+        <Border Background="{DynamicResource MenuSurface}"
+                BorderBrush="{DynamicResource BorderBrush}"
+                BorderThickness="1"
+                CornerRadius="8"
+                Padding="6">
+            <Border.Effect>
+                <DropShadowEffect ShadowDepth="2"
+                                  Direction="270"
+                                  BlurRadius="20"
+                                  Color="#000000"
+                                  Opacity="0.22"
+                                  RenderingBias="Quality"/>
+            </Border.Effect>
+
+            <WrapPanel x:Name="IconsPanel"
+                       Orientation="Horizontal"/>
+        </Border>
+    </Border>
+
+</Window>

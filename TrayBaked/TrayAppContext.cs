@@ -31,6 +31,10 @@ class TrayAppContext : IDisposable
     // Only one of each window may be open at a time.
     private SettingsWindow?    _settingsWindow;
     private ActivityLogWindow? _activityLogWindow;
+    private QuickLaunchWindow? _quickLaunchWindow;
+    // Timestamp used to avoid reopening the popup when the tray click that
+    // dismissed it triggers a new open within the same gesture.
+    private DateTime           _quickLaunchClosedAt = DateTime.MinValue;
 
     public TrayAppContext()
     {
@@ -45,11 +49,14 @@ class TrayAppContext : IDisposable
             Visible = true,
         };
 
-        // Left-click → Settings; right-click → context menu
+        // Left-click → quick-launch popup; right-click → context menu
         _trayIcon.MouseUp += (_, e) =>
         {
             if (e.Button == System.Windows.Forms.MouseButtons.Left)
-                Application.Current.Dispatcher.BeginInvoke(OpenSettings);
+            {
+                var pos = System.Windows.Forms.Cursor.Position;
+                Application.Current.Dispatcher.BeginInvoke(() => OpenQuickLaunch(pos));
+            }
             else if (e.Button == System.Windows.Forms.MouseButtons.Right)
                 Application.Current.Dispatcher.BeginInvoke(OpenTrayMenu);
         };
@@ -121,6 +128,43 @@ class TrayAppContext : IDisposable
         return menu;
     }
 
+    // ── Quick-launch popup ───────────────────────────────────────────────────
+
+    private void OpenQuickLaunch(System.Drawing.Point trayIconPos)
+    {
+        // Toggle: if the popup is already open, close it.
+        if (_quickLaunchWindow != null)
+        {
+            _quickLaunchWindow.Close();
+            return;
+        }
+
+        // Debounce: skip if the popup just closed because focus shifted to the
+        // tray icon when the user clicked to dismiss it.
+        if ((DateTime.UtcNow - _quickLaunchClosedAt).TotalMilliseconds < 300)
+            return;
+
+        // Fall back to settings when no apps are configured yet.
+        if (_config.Apps.Count == 0)
+        {
+            OpenSettings();
+            return;
+        }
+
+        _quickLaunchWindow = new QuickLaunchWindow(_config, trayIconPos);
+        _quickLaunchWindow.Closed += (_, _) =>
+        {
+            _quickLaunchClosedAt = DateTime.UtcNow;
+            _quickLaunchWindow   = null;
+            _trayIcon.Text       = "TrayBaked";
+        };
+        _trayIcon.Text = "";
+        _quickLaunchWindow.Show();
+        // Activate() makes this window the foreground window so that
+        // Deactivated fires correctly when the user clicks elsewhere.
+        _quickLaunchWindow.Activate();
+    }
+
     // ── Application actions ──────────────────────────────────────────────────
 
     private async Task RestartExplorerAsync()
@@ -189,6 +233,7 @@ class TrayAppContext : IDisposable
         _config = config;
         ConfigManager.Save(config);
         _monitor.UpdateDebounce(config.DebounceSeconds);
+        AppIconExtractor.ClearCache();
         ActivityLog.Add("Application settings updated");
     }
 
@@ -219,7 +264,7 @@ class TrayAppContext : IDisposable
 
             if (_config.AutoRestart)
             {
-                var toRestart = appStates.Where(s => s.Running).Select(s => s.App).ToList();
+                var toRestart = appStates.Where(s => s.Running && !s.App.ExcludeFromAutoRestart).Select(s => s.App).ToList();
                 if (toRestart.Count > 0)
                 {
                     await AppLauncher.RestartAppsAsync(toRestart,
@@ -267,12 +312,12 @@ class TrayAppContext : IDisposable
         switch (arg)
         {
             case "restart-all":
-                await AppLauncher.RestartAppsAsync(appStates.Select(s => s.App),
+                await AppLauncher.RestartAppsAsync(appStates.Where(s => !s.App.ExcludeFromAutoRestart).Select(s => s.App),
                     new Progress<RestartStatus>(LogRestartStatus));
                 break;
 
             case "restart-running":
-                var running = appStates.Where(s => s.Running).Select(s => s.App).ToList();
+                var running = appStates.Where(s => s.Running && !s.App.ExcludeFromAutoRestart).Select(s => s.App).ToList();
                 if (running.Count > 0)
                 {
                     await AppLauncher.RestartAppsAsync(running,

@@ -545,6 +545,44 @@
         </Style.Triggers>
     </Style>
 
+    <!-- ═══════════════  Quick-Launch Icon Button  ══════════════════════════
+         Used in QuickLaunchWindow: a frameless 44×44 button that shows
+         a rounded hover highlight but is otherwise transparent.
+    ─────────────────────────────────────────────────────────────────────────── -->
+
+    <Style x:Key="TrayIconButton" TargetType="Button">
+        <Setter Property="Background"       Value="Transparent"/>
+        <Setter Property="BorderThickness"  Value="0"/>
+        <Setter Property="Width"            Value="40"/>
+        <Setter Property="Height"           Value="40"/>
+        <Setter Property="Padding"          Value="6"/>
+        <Setter Property="Cursor"           Value="Hand"/>
+        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="Bd"
+                            Background="{TemplateBinding Background}"
+                            CornerRadius="6"
+                            Padding="{TemplateBinding Padding}">
+                        <ContentPresenter HorizontalAlignment="Center"
+                                          VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Bd" Property="Background"
+                                    Value="{DynamicResource CtrlHoverBg}"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="Bd" Property="Background"
+                                    Value="{DynamicResource CtrlPressBg}"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <!-- ═══════════════  Windows 11 Tray Context Menu  ══════════════════════
          These styles are applied programmatically in TrayAppContext.
          DynamicResource references mean they respond to light ↔ dark switches.

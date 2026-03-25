@@ -65,9 +65,10 @@ public partial class SettingsWindow : Window
         {
             var row = new WatchedAppRow
             {
-                Name         = app.Name,
-                ProcessName  = app.ProcessName,
-                StartCommand = app.StartCommand ?? ""
+                Name                   = app.Name,
+                ProcessName            = app.ProcessName,
+                StartCommand           = app.StartCommand ?? "",
+                ExcludeFromAutoRestart = app.ExcludeFromAutoRestart
             };
             AttachRowListener(row);
             _rows.Add(row);
@@ -151,11 +152,12 @@ public partial class SettingsWindow : Window
                 continue;
             _config.Apps.Add(new WatchedApp
             {
-                Name         = row.Name.Trim(),
-                ProcessName  = row.ProcessName.Trim(),
-                StartCommand = string.IsNullOrWhiteSpace(row.StartCommand)
-                                   ? null
-                                   : row.StartCommand.Trim()
+                Name                   = row.Name.Trim(),
+                ProcessName            = row.ProcessName.Trim(),
+                StartCommand           = string.IsNullOrWhiteSpace(row.StartCommand)
+                                             ? null
+                                             : row.StartCommand.Trim(),
+                ExcludeFromAutoRestart = row.ExcludeFromAutoRestart
             });
         }
 
@@ -186,8 +188,9 @@ public partial class SettingsWindow : Window
     // Enter edit mode on the first click instead of requiring a second click
     private void AppsGrid_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
-        // Don't intercept clicks on buttons (e.g. the inline delete button)
+        // Don't intercept clicks on buttons or checkboxes
         if (FindAncestor<Button>(e.OriginalSource as DependencyObject) != null) return;
+        if (FindAncestor<System.Windows.Controls.CheckBox>(e.OriginalSource as DependencyObject) != null) return;
 
         var cell = FindAncestor<DataGridCell>(e.OriginalSource as DependencyObject);
         if (cell == null || cell.IsEditing || cell.IsReadOnly) return;
@@ -220,6 +223,7 @@ public class WatchedAppRow : INotifyPropertyChanged
     private string _name = "";
     private string _processName = "";
     private string _startCommand = "";
+    private bool   _excludeFromAutoRestart;
 
     public string Name
     {
@@ -237,6 +241,12 @@ public class WatchedAppRow : INotifyPropertyChanged
     {
         get => _startCommand;
         set { _startCommand = value; OnPropertyChanged(); }
+    }
+
+    public bool ExcludeFromAutoRestart
+    {
+        get => _excludeFromAutoRestart;
+        set { _excludeFromAutoRestart = value; OnPropertyChanged(); }
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;

@@ -39,7 +39,7 @@ public partial class RestartWindow : Window
             {
                 App          = s.App,
                 DisplayLabel = s.Running ? s.App.Name : $"{s.App.Name}  (not running)",
-                IsChecked    = s.Running
+                IsChecked    = s.Running && !s.App.ExcludeFromAutoRestart
             })
             .ToList();
 
