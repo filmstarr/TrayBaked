@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 92 92">
+
+  <!-- Main outer body -->
+  <rect x="3" y="3" width="86" height="86" rx="8" fill="#EC3D63" stroke="#2B1650" stroke-width="3"/>
+
+  <!-- Top panel divider — thick dark line separating burner section from oven body -->
+  <line x1="4.4" y1="29" x2="87.6" y2="29" stroke="#8A6490" stroke-width="3"/>
+  <line x1="3" y1="27" x2="89" y2="27" stroke="#2B1650" stroke-width="3"/>
+  <line x1="3" y1="31" x2="89" y2="31" stroke="#2B1650" stroke-width="3"/>
+
+  <!-- Burners: panel spans y=3–31 (centre y≈17), body x=3–89 (86 wide)        -->
+  <!-- 5 burners spaced evenly with equal margins; outer r=8, inner r=5.5       -->
+
+  <circle cx="15.5" cy="15" r="6.75"   fill="#2B1650"/>
+  <circle cx="15.5" cy="15" r="3.25" fill="#FFFFFF"/>
+
+  <circle cx="30.5" cy="15" r="6.75"   fill="#2B1650"/>
+  <circle cx="30.5" cy="15" r="3.25" fill="#FFFFFF"/>
+
+  <circle cx="46" cy="15" r="7.25"   fill="#2B1650"/>
+  <circle cx="46" cy="15" r="3.75" fill="#FFFFFF"/>
+
+  <circle cx="61.5" cy="15" r="6.75"   fill="#2B1650"/>
+  <circle cx="61.5" cy="15" r="3.25" fill="#FFFFFF"/>
+
+  <!-- Green (on) burner -->
+  <circle cx="76.5" cy="15" r="6.75"   fill="#2B1650"/>
+  <circle cx="76.5" cy="15" r="3.25" fill="#3DD44A"/>
+
+
+
+  <!-- Door inset frame (dark purple) — centred in body, leaving pink frame     -->
+  <!-- Body fill: x=3–89, y=3–89.  Inset by 9 on L/R → x=12–80 (width 68).   -->
+  <!-- Inset by 4 at top (y=35), 7 at bottom (y=82) for visible pink frame.    -->
+  <rect x="12" y="35" width="68" height="47" rx="6" fill="#2B1650"/>
+
+  <rect x="9" y="36.5" width="74" height="8" rx="2" fill="#8A6490" stroke="#2B1650" stroke-width="3"/>
+
+
+  <!-- Window glass (blue) -->
+  <rect x="15" y="46" width="62" height="33" rx="3" fill="#4BBAD4"/>
+
+  <!-- Window reflection — diagonal parallelogram stripe, top-left → bottom-right -->
+  <clipPath id="wc">
+    <rect x="15" y="46" width="62" height="33" rx="3"/>
+  </clipPath>
+  <polygon points="15,46 51,46 78,80 41,80" fill="#A8E2F0" opacity="0.65" clip-path="url(#wc)"/>
+
+</svg>
