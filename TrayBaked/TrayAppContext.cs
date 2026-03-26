@@ -117,7 +117,12 @@ class TrayAppContext : IDisposable
             return mi;
         }
 
-        var menu = new ContextMenu { Style = menuStyle };
+        var menu = new ContextMenu
+        {
+            Style = menuStyle,
+            HorizontalOffset = -5,
+            VerticalOffset = 10,
+        };
         menu.Items.Add(Item("Settings…",        (_, _) => OpenSettings()));
         menu.Items.Add(new Separator            { Style = sepStyle });
         menu.Items.Add(Item("Restart Apps…",    (_, _) => OpenRestartWindow()));

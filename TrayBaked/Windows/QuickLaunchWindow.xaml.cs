@@ -1,9 +1,6 @@
 using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Interop;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
 using TrayBaked.Models;
 using Application = System.Windows.Application;
 using Button      = System.Windows.Controls.Button;
@@ -22,6 +19,7 @@ partial class QuickLaunchWindow : Window
     private readonly AppConfig            _config;
     private readonly System.Drawing.Point _trayIconPos;
     private bool _closing;
+    private bool _contextMenuOpen;
     private CancellationTokenSource? _autoCloseCts;
 
     // Layout constants (WPF device-independent pixels)
@@ -53,7 +51,7 @@ partial class QuickLaunchWindow : Window
 
     private void RequestClose()
     {
-        if (_closing) return;
+        if (_closing || _contextMenuOpen) return;
         _closing = true;
         Close();
     }
@@ -115,6 +113,30 @@ partial class QuickLaunchWindow : Window
             ToolTipService.SetInitialShowDelay(btn, 100);
             ToolTipService.SetBetweenShowDelay(btn, 0);
 
+            var cm = new ContextMenu
+            {
+                Style            = (Style?)Application.Current.TryFindResource("TrayMenuStyle"),
+                HorizontalOffset = -5,
+                VerticalOffset   = -5,
+            };
+            var exitItem = new MenuItem
+            {
+                Header = "Exit",
+                Style  = (Style?)Application.Current.TryFindResource("TrayMenuItemStyle"),
+                Tag    = btn
+            };
+            exitItem.Click += OnExitAppClick;
+            cm.Items.Add(exitItem);
+
+            cm.Opened += (_, _) => { _contextMenuOpen = true;  CancelAutoClose(); };
+            cm.Closed  += (_, _) => { _contextMenuOpen = false; if (!IsMouseOver) StartAutoClose(); };
+
+            btn.ContextMenuOpening += (_, e) =>
+            {
+                if (Process.GetProcessesByName(app.ProcessName).Length == 0)
+                    e.Handled = true;
+            };
+            btn.ContextMenu = cm;
             btn.Click += OnIconClick;
             IconsPanel.Children.Add(btn);
         }
@@ -148,6 +170,28 @@ partial class QuickLaunchWindow : Window
         if (sender is not Button btn || btn.Tag is not WatchedApp app) return;
         RequestClose();
         await AppLauncher.RestartAppsAsync([app], minimize: false);
+    }
+
+    private async void OnExitAppClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is not MenuItem item || item.Tag is not Button btn || btn.Tag is not WatchedApp app) return;
+
+        var procs = Process.GetProcessesByName(app.ProcessName);
+
+        foreach (var p in procs)
+        {
+            try { p.CloseMainWindow(); } catch { }
+        }
+
+        await Task.Delay(500);
+
+        foreach (var p in procs)
+        {
+            try { if (!p.HasExited) p.Kill(); } catch { }
+        }
+
+        if (btn.Content is Image img)
+            img.Opacity = 0.35;
     }
 
     // ── Sizing & positioning ─────────────────────────────────────────────────
