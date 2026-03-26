@@ -11,6 +11,7 @@ The app is built with WPF on .NET and runs quietly in the system tray.
 - ✅ Runs quietly in the tray
 - 👀 Detects Explorer restarts
 - 🔁 Restarts your chosen apps (auto or prompt)
+- ⚡ Quick-launch any app with one click from the tray
 - 🧾 Keeps an activity log
 
 ---
@@ -18,10 +19,12 @@ The app is built with WPF on .NET and runs quietly in the system tray.
 ## ✨ Features
 
 - **Explorer restart detection**: Monitors for `explorer.exe` restarts using a lightweight background watcher.
+- **Quick launcher**: Left‑click the tray icon to open a compact icon grid of your configured apps. Click any icon to restart that app instantly.
 - **Quick app restart**:
   - Automatically restart the apps you had running before Explorer restarted, or
   - Interactively choose which configured apps to restart.
 - **System tray integration**:
+  - Left‑click the tray icon for the quick launcher.
   - Right‑click the tray icon for a themed context menu.
   - Open settings, restart apps on demand, view the activity log, or exit the app.
 - **Activity log**: Shows a history of restarts and other important actions performed by TrayBaked.
@@ -46,13 +49,15 @@ The app is built with WPF on .NET and runs quietly in the system tray.
 
 Once running, TrayBaked lives in the system tray (notification area).
 
+- **Quick launcher**
+  - **Left‑click** the TrayBaked icon.
+  - A small icon grid pops up above the taskbar showing all your configured apps.
+  - Icons for apps that are not currently running appear dimmed.
+  - Click any icon to restart that app. The popup closes automatically when you click away or move the mouse out for a couple of seconds.
+
 - **Open the tray menu**
   - **Right‑click** the TrayBaked icon.
   - Use the menu items to open settings, restart apps, view the activity log, restart Explorer, or exit.
-
-- **Open the settings**
-  - **Left‑click** the tray icon.
-  - This opens the settings window.
 
 ---
 

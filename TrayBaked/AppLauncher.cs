@@ -18,7 +18,8 @@ static class AppLauncher
 
     public static async Task RestartAppsAsync(
         IEnumerable<WatchedApp> apps,
-        IProgress<RestartStatus>? progress = null)
+        IProgress<RestartStatus>? progress = null,
+        bool minimize = true)
     {
         foreach (var app in apps)
         {
@@ -58,7 +59,7 @@ static class AppLauncher
 
             try
             {
-                await LaunchAndMinimizeAsync(target);
+                await LaunchAndMinimizeAsync(target, minimize);
                 progress?.Report(new RestartStatus(app.Name, "Started", StatusKind.Success));
             }
             catch (Exception ex)
@@ -106,7 +107,7 @@ static class AppLauncher
         return new LaunchTarget(null, null);
     }
 
-    private static async Task LaunchAndMinimizeAsync(LaunchTarget target)
+    private static async Task LaunchAndMinimizeAsync(LaunchTarget target, bool minimize)
     {
         if (target.Aumid != null)
         {
@@ -119,19 +120,22 @@ static class AppLauncher
                 UseShellExecute = true
             });
 
-            var launched = await WaitForNewAumidProcessAsync(target.Aumid, existingPids, TimeSpan.FromSeconds(10));
-            if (launched != null)
-                await MinimizeMainWindowAsync(launched, TimeSpan.FromSeconds(10));
+            if (minimize)
+            {
+                var launched = await WaitForNewAumidProcessAsync(target.Aumid, existingPids, TimeSpan.FromSeconds(10));
+                if (launched != null)
+                    await MinimizeMainWindowAsync(launched, TimeSpan.FromSeconds(10));
+            }
         }
         else if (target.ExePath != null)
         {
             var p = Process.Start(new ProcessStartInfo(target.ExePath)
             {
                 UseShellExecute = true,
-                WindowStyle = ProcessWindowStyle.Minimized
+                WindowStyle = minimize ? ProcessWindowStyle.Minimized : ProcessWindowStyle.Normal
             });
 
-            if (p != null)
+            if (minimize && p != null)
                 await MinimizeMainWindowAsync(p, TimeSpan.FromSeconds(10));
         }
     }

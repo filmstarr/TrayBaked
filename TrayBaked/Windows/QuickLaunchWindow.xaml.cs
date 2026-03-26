@@ -147,7 +147,7 @@ partial class QuickLaunchWindow : Window
     {
         if (sender is not Button btn || btn.Tag is not WatchedApp app) return;
         RequestClose();
-        await AppLauncher.RestartAppsAsync([app]);
+        await AppLauncher.RestartAppsAsync([app], minimize: false);
     }
 
     // ── Sizing & positioning ─────────────────────────────────────────────────
