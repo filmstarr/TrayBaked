@@ -8,11 +8,6 @@ public partial class ActivityLogWindow : Window
     {
         InitializeComponent();
         WindowHelper.ApplyTitleBarTheme(this);
-
-        var icon = AppIconHelper.GetIconBitmapSource();
-        Icon = icon;
-        HeaderIcon.Source = icon;
-
         Refresh();
 
         ActivityLog.Changed += OnLogChanged;

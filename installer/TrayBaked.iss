@@ -12,7 +12,7 @@
 #define MyAppName "TrayBaked"
 #define MyAppPublisher "TrayBaked"
 #define MyAppExeName "TrayBaked.exe"
-#define MyAppIcon "TrayBaked.ico"
+#define MyAppIcon "..\TrayBaked\Assets\TrayBaked.ico"
 
 [Setup]
 AppId={{C8B1B191-7F8D-4A1F-83B1-0B8B6B9E7E10}

@@ -23,11 +23,6 @@ public partial class RestartWindow : Window
         _appStates = appStates;
         InitializeComponent();
         WindowHelper.ApplyTitleBarTheme(this);
-
-        var icon = AppIconHelper.GetIconBitmapSource();
-        Icon = icon;
-        HeaderIcon.Source = icon;
-
         LoadPhase1();
     }
 

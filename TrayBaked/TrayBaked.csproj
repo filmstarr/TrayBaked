@@ -14,4 +14,8 @@
     <ApplicationIcon>Assets\TrayBaked.ico</ApplicationIcon>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Resource Include="Assets\TrayBaked.ico" />
+  </ItemGroup>
+
 </Project>

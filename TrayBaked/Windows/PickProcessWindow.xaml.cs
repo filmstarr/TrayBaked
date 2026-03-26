@@ -19,9 +19,6 @@ public partial class PickProcessWindow : Window
     {
         InitializeComponent();
         WindowHelper.ApplyTitleBarTheme(this);
-        var icon = AppIconHelper.GetIconBitmapSource();
-        Icon = icon;
-        HeaderIcon.Source = icon;
         Loaded += async (_, _) => await LoadProcessesAsync();
     }
 

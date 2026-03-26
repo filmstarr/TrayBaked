@@ -31,10 +31,6 @@ public partial class SettingsWindow : Window
         InitializeComponent();
         WindowHelper.ApplyTitleBarTheme(this);
 
-        var icon = AppIconHelper.GetIconBitmapSource();
-        Icon = icon;
-        HeaderIcon.Source = icon;
-
         AppsGrid.ItemsSource = _rows;
         LoadData();
 
