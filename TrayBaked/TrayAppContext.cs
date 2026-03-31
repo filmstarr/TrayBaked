@@ -129,7 +129,7 @@ class TrayAppContext : IDisposable
         menu.Items.Add(Item("Activity Log…",    (_, _) => OpenActivityLog()));
         menu.Items.Add(Item("Restart Explorer", (_, _) => _ = RestartExplorerAsync()));
         menu.Items.Add(new Separator            { Style = sepStyle });
-        menu.Items.Add(Item("Exit",             (_, _) => ExitApplication()));
+        menu.Items.Add(Item("Quit",             (_, _) => QuitApplication()));
         return menu;
     }
 
@@ -348,7 +348,7 @@ class TrayAppContext : IDisposable
         if (msg != null) ActivityLog.Add(msg);
     }
 
-    private void ExitApplication()
+    private void QuitApplication()
     {
         _monitor.Stop();
         _trayIcon.Visible = false;

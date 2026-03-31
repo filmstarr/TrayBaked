@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
 using TrayBaked.Models;
@@ -119,14 +120,23 @@ partial class QuickLaunchWindow : Window
                 HorizontalOffset = -5,
                 VerticalOffset   = -5,
             };
-            var exitItem = new MenuItem
+            var restartItem = new MenuItem
             {
-                Header = "Exit",
+                Header = "Restart",
                 Style  = (Style?)Application.Current.TryFindResource("TrayMenuItemStyle"),
                 Tag    = btn
             };
-            exitItem.Click += OnExitAppClick;
-            cm.Items.Add(exitItem);
+            restartItem.Click += OnRestartAppClick;
+            cm.Items.Add(restartItem);
+
+            var quitItem = new MenuItem
+            {
+                Header = "Quit",
+                Style  = (Style?)Application.Current.TryFindResource("TrayMenuItemStyle"),
+                Tag    = btn
+            };
+            quitItem.Click += OnQuitAppClick;
+            cm.Items.Add(quitItem);
 
             cm.Opened += (_, _) => { _contextMenuOpen = true;  CancelAutoClose(); };
             cm.Closed  += (_, _) => { _contextMenuOpen = false; if (!IsMouseOver) StartAutoClose(); };
@@ -165,14 +175,26 @@ partial class QuickLaunchWindow : Window
 
     // ── Actions ──────────────────────────────────────────────────────────────
 
-    private async void OnIconClick(object sender, RoutedEventArgs e)
+    private void OnIconClick(object sender, RoutedEventArgs e)
     {
         if (sender is not Button btn || btn.Tag is not WatchedApp app) return;
+        RequestClose();
+
+        var procs = Process.GetProcessesByName(app.ProcessName);
+        if (procs.Length > 0)
+            FocusApp(procs);
+        else
+            _ = AppLauncher.RestartAppsAsync([app], minimize: false);
+    }
+
+    private async void OnRestartAppClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is not MenuItem item || item.Tag is not Button btn || btn.Tag is not WatchedApp app) return;
         RequestClose();
         await AppLauncher.RestartAppsAsync([app], minimize: false);
     }
 
-    private async void OnExitAppClick(object sender, RoutedEventArgs e)
+    private async void OnQuitAppClick(object sender, RoutedEventArgs e)
     {
         if (sender is not MenuItem item || item.Tag is not Button btn || btn.Tag is not WatchedApp app) return;
 
@@ -193,6 +215,48 @@ partial class QuickLaunchWindow : Window
         if (btn.Content is Image img)
             img.Opacity = 0.35;
     }
+
+    private static void FocusApp(Process[] procs)
+    {
+        var pids = new HashSet<int>(procs.Select(p => p.Id));
+        var candidates = new List<IntPtr>();
+
+        EnumWindows((h, _) =>
+        {
+            if (GetWindowThreadProcessId(h, out uint pid) != 0 && pids.Contains((int)pid))
+                candidates.Add(h);
+            return true;
+        }, IntPtr.Zero);
+
+        // Prefer an already-visible window; fall back to hidden (tray-minimized) ones
+        var hWnd = candidates.FirstOrDefault(IsWindowVisible);
+        if (hWnd == IntPtr.Zero) hWnd = candidates.FirstOrDefault();
+        if (hWnd == IntPtr.Zero) return;
+
+        ShowWindow(hWnd, SW_SHOW);
+        ShowWindow(hWnd, SW_RESTORE);
+        SetForegroundWindow(hWnd);
+    }
+
+    private delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
+
+    private const int SW_SHOW    = 5;
+    private const int SW_RESTORE = 9;
+
+    [DllImport("user32.dll")]
+    private static extern bool EnumWindows(EnumWindowsProc lpEnumFunc, IntPtr lParam);
+
+    [DllImport("user32.dll")]
+    private static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
+
+    [DllImport("user32.dll")]
+    private static extern bool IsWindowVisible(IntPtr hWnd);
+
+    [DllImport("user32.dll")]
+    private static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+
+    [DllImport("user32.dll")]
+    private static extern bool SetForegroundWindow(IntPtr hWnd);
 
     // ── Sizing & positioning ─────────────────────────────────────────────────
 
